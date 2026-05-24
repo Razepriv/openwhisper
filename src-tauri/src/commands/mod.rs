@@ -127,6 +127,14 @@ pub fn check_apple_intelligence_available() -> bool {
     }
 }
 
+/// OpenWhisper Phase 1.2: snapshot the host system for the BackendResolver
+/// and the zero-touch onboarding wizard. See `system_probe` module docs.
+#[specta::specta]
+#[tauri::command]
+pub fn get_system_profile() -> Result<crate::system_probe::SystemProfile, String> {
+    crate::system_probe::probe().map_err(|e| format!("system probe failed: {}", e))
+}
+
 /// Try to initialize Enigo (keyboard/mouse simulation).
 /// On macOS, this will return an error if accessibility permissions are not granted.
 #[specta::specta]
