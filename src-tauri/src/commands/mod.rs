@@ -159,6 +159,21 @@ pub fn get_recommended_stack(
     ))
 }
 
+/// OpenWhisper Phase 1.5: kick off the zero-touch first-run flow.
+/// Idempotent — safe to call repeatedly. Emits events the frontend listens
+/// for. See `auto_provisioner` module docs for the event contract.
+#[specta::specta]
+#[tauri::command]
+pub async fn start_auto_provisioning(
+    app: AppHandle,
+    has_capable_gpu: bool,
+    ollama_detected: bool,
+) -> Result<crate::auto_provisioner::AutoProvisionCompleted, String> {
+    crate::auto_provisioner::provision(app, has_capable_gpu, ollama_detected)
+        .await
+        .map_err(|e| format!("auto-provisioning failed: {}", e))
+}
+
 /// Try to initialize Enigo (keyboard/mouse simulation).
 /// On macOS, this will return an error if accessibility permissions are not granted.
 #[specta::specta]
