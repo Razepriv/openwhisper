@@ -11,14 +11,21 @@ import { ModelStateEvent, RecordingErrorEvent } from "./lib/types/events";
 import "./App.css";
 import AccessibilityPermissions from "./components/AccessibilityPermissions";
 import Footer from "./components/footer";
-import Onboarding, { AccessibilityOnboarding } from "./components/onboarding";
+import Onboarding, {
+  AccessibilityOnboarding,
+  AutoSetupStep,
+} from "./components/onboarding";
 import { Sidebar, SidebarSection, SECTIONS_CONFIG } from "./components/Sidebar";
 import { useSettings } from "./hooks/useSettings";
 import { useSettingsStore } from "./stores/settingsStore";
 import { commands } from "@/bindings";
 import { getLanguageDirection, initializeRTL } from "@/lib/utils/rtl";
 
-type OnboardingStep = "accessibility" | "model" | "done";
+type OnboardingStep =
+  | "accessibility"
+  | "auto-setup" // Phase 1.5b: zero-touch first-run (default)
+  | "model" // legacy manual picker, used as "advanced" escape hatch
+  | "done";
 
 const renderSettingsContent = (section: SidebarSection) => {
   const ActiveComponent =
@@ -224,9 +231,20 @@ function App() {
   };
 
   const handleAccessibilityComplete = () => {
-    // Returning users already have models, skip to main app
-    // New users need to select a model
-    setOnboardingStep(isReturningUser ? "done" : "model");
+    // Returning users already have models, skip to main app.
+    // New users go through the zero-touch auto-setup (Phase 1.5b) which
+    // picks the best model for their hardware and downloads it in the
+    // background. The manual picker is reachable via "Choose manually".
+    setOnboardingStep(isReturningUser ? "done" : "auto-setup");
+  };
+
+  const handleAutoSetupComplete = () => {
+    setOnboardingStep("done");
+  };
+
+  const handleAutoSetupAdvanced = () => {
+    // Escape hatch: user wants to pick a model manually.
+    setOnboardingStep("model");
   };
 
   const handleModelSelected = () => {
@@ -241,6 +259,15 @@ function App() {
 
   if (onboardingStep === "accessibility") {
     return <AccessibilityOnboarding onComplete={handleAccessibilityComplete} />;
+  }
+
+  if (onboardingStep === "auto-setup") {
+    return (
+      <AutoSetupStep
+        onComplete={handleAutoSetupComplete}
+        onShowAdvanced={handleAutoSetupAdvanced}
+      />
+    );
   }
 
   if (onboardingStep === "model") {

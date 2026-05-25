@@ -24,6 +24,27 @@
     "downloading": "Downloading...",
     "customModelDescription": "Not officially supported",
     "downloadFailed": "Download failed. Please try again.",
+    "autoSetup": {
+      "subtitle": "Setting up the best speech-to-text model for your machine",
+      "probing": "Detecting your hardware…",
+      "recommended": "Recommended for your system",
+      "downloadSize": "Download size",
+      "tier": "Tier {{tier}}",
+      "downloadingPct": "Downloading… {{pct}}%",
+      "finalizing": "Finalizing…",
+      "chooseManually": "Choose another model manually",
+      "errorTitle": "Setup didn't complete",
+      "phase": {
+        "probing": "Looking at your hardware…",
+        "downloading": "Downloading your model",
+        "finalizing": "Almost ready…",
+        "done": "All set",
+        "error": "Setup didn't complete"
+      },
+      "errors": {
+        "provisioning": "Auto-setup failed"
+      }
+    },
     "modelCard": {
       "accuracy": "accuracy",
       "speed": "speed"
