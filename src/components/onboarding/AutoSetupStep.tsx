@@ -43,12 +43,7 @@ import { ProgressBar } from "../shared";
 interface RecommendedStack {
   tier: "S" | "A" | "B" | "C" | "D" | "E" | "F" | "G" | "H" | "Z";
   stt_model_id: string;
-  cleanup_backend:
-    | "AppleFM"
-    | "PhiSilica"
-    | "Ollama"
-    | "LlamaSidecar"
-    | "None";
+  cleanup_backend: "AppleFM" | "PhiSilica" | "Ollama" | "LlamaSidecar" | "None";
   estimated_download_mb: number;
   summary: string;
 }
@@ -96,10 +91,10 @@ const AutoSetupStep: React.FC<AutoSetupStepProps> = ({
    */
   const probeAndStart = useCallback(async () => {
     try {
-      const resolved = await invoke<RecommendedStack>(
-        "get_recommended_stack",
-        { hasCapableGpu: false, ollamaDetected: false },
-      );
+      const resolved = await invoke<RecommendedStack>("get_recommended_stack", {
+        hasCapableGpu: false,
+        ollamaDetected: false,
+      });
       setStack(resolved);
       setPhase("downloading");
 

@@ -10,8 +10,10 @@ mod clipboard;
 mod commands;
 mod helpers;
 mod input;
+mod llama_sidecar;
 mod llm_client;
 mod managers;
+mod ollama_detect;
 mod overlay;
 pub mod portable;
 mod settings;
@@ -393,6 +395,7 @@ pub fn run(cli_args: CliArgs) {
             commands::get_system_profile,
             commands::get_recommended_stack,
             commands::start_auto_provisioning,
+            commands::detect_ollama,
             commands::initialize_enigo,
             commands::initialize_shortcuts,
             commands::models::get_available_models,

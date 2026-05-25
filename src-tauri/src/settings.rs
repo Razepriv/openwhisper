@@ -77,6 +77,84 @@ impl From<LogLevel> for tauri_plugin_log::LogLevel {
     }
 }
 
+/// OpenWhisper Phase 1.9: how aggressively the LLM cleanup pass should
+/// rewrite the raw transcription. Wispr Flow exposes the same 4 tiers in
+/// its Auto Cleanup setting. Higher tiers ask the model to do more — fix
+/// grammar, restructure sentences, remove every filler word — at the cost
+/// of more latency (and a slightly higher chance of altering meaning).
+///
+/// Defaults to `Light` because that's the sweet spot for dictation users:
+/// the obvious fixes (period at end, capital at start, "uhh" removed) with
+/// none of the heavy rewriting that destroys nuance.
+///
+/// Mapped to the `system_prompt_for_cleanup_level()` function which returns
+/// the actual prompt sent to the LLM. Keep them in sync.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum CleanupLevel {
+    /// Bypass the LLM entirely. Raw Whisper output is what the user sees.
+    None,
+    /// Punctuation + capitalisation only. No filler removal, no rewriting.
+    #[default]
+    Light,
+    /// Adds filler-word removal and light grammar tidying.
+    Medium,
+    /// Aggressively restructures sentences for clarity. Best for
+    /// long-form dictation; risky for short chat messages.
+    High,
+}
+
+impl CleanupLevel {
+    /// Stable identifier used in logs, tray menus, and the JSON payload
+    /// returned to the frontend. Lowercase to match the serde format.
+    pub fn code(self) -> &'static str {
+        match self {
+            CleanupLevel::None => "none",
+            CleanupLevel::Light => "light",
+            CleanupLevel::Medium => "medium",
+            CleanupLevel::High => "high",
+        }
+    }
+
+    /// True if the cleanup pass should be invoked. Used as a derived
+    /// replacement for the legacy `post_process_enabled` boolean — when a
+    /// user picks `Light/Medium/High` we run the pass; `None` skips it.
+    pub fn is_enabled(self) -> bool {
+        !matches!(self, CleanupLevel::None)
+    }
+}
+
+/// System prompt sent to the LLM cleanup backend for the given level.
+///
+/// Phase 1.9 ships these as static strings. A future phase (decision-deferred,
+/// likely Phase 7 Transforms) will let users override per-app or per-tier.
+///
+/// Each prompt is intentionally short — the LLM cleanup pipeline is latency
+/// sensitive (<200 ms target per research/06-architecture-and-roadmap.md
+/// latency budget). Long prompts blow that budget.
+pub fn system_prompt_for_cleanup_level(level: CleanupLevel) -> Option<&'static str> {
+    match level {
+        CleanupLevel::None => None,
+        CleanupLevel::Light => Some(
+            "You clean up dictated speech. Fix capitalization and add minimal punctuation. \
+             Do NOT remove filler words, do NOT restructure sentences, do NOT change meaning. \
+             Output only the cleaned text — no commentary, no quotes.",
+        ),
+        CleanupLevel::Medium => Some(
+            "You clean up dictated speech. Fix capitalization, add proper punctuation, and \
+             remove obvious filler words (um, uh, like, you know). Preserve the speaker's \
+             intent and word choice. Do not restructure sentences. \
+             Output only the cleaned text — no commentary, no quotes.",
+        ),
+        CleanupLevel::High => Some(
+            "You clean up dictated speech. Fix capitalization, punctuation, and grammar. \
+             Remove filler words. Restructure run-on sentences for clarity while preserving \
+             the speaker's meaning and tone. \
+             Output only the cleaned text — no commentary, no quotes.",
+        ),
+    }
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Type)]
 pub struct ShortcutBinding {
     pub id: String,
@@ -389,6 +467,13 @@ pub struct AppSettings {
     pub auto_submit_key: AutoSubmitKey,
     #[serde(default = "default_post_process_enabled")]
     pub post_process_enabled: bool,
+    /// OpenWhisper Phase 1.9: replaces the binary `post_process_enabled`
+    /// flag with a 4-tier picker. Legacy `post_process_enabled` is kept for
+    /// backward compatibility — it's read on first migration but never
+    /// written; new code should branch on `cleanup_level` instead.
+    /// See `CleanupLevel` docs for the tier semantics.
+    #[serde(default)]
+    pub cleanup_level: CleanupLevel,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -793,6 +878,7 @@ pub fn get_default_settings() -> AppSettings {
         auto_submit: default_auto_submit(),
         auto_submit_key: AutoSubmitKey::default(),
         post_process_enabled: default_post_process_enabled(),
+        cleanup_level: CleanupLevel::default(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),

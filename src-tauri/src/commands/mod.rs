@@ -174,6 +174,15 @@ pub async fn start_auto_provisioning(
         .map_err(|e| format!("auto-provisioning failed: {}", e))
 }
 
+/// OpenWhisper Phase 1.8: detect a pre-installed Ollama binary so the
+/// BackendResolver can route LLM cleanup through it instead of the
+/// bundled llama.cpp sidecar.
+#[specta::specta]
+#[tauri::command]
+pub fn detect_ollama() -> crate::ollama_detect::OllamaDetection {
+    crate::ollama_detect::detect()
+}
+
 /// Try to initialize Enigo (keyboard/mouse simulation).
 /// On macOS, this will return an error if accessibility permissions are not granted.
 #[specta::specta]
