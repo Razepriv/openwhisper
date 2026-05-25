@@ -360,6 +360,13 @@ pub(crate) async fn process_transcription_output(
         final_text = converted_text;
     }
 
+    // Phase 3.2: snippet expansion happens BEFORE the LLM cleanup pass
+    // so that the LLM sees the expanded text and can polish grammar
+    // around the substitution. No-op when the snippets list is empty.
+    if !settings.snippets.is_empty() {
+        final_text = crate::managers::snippets::expand(&final_text, &settings.snippets);
+    }
+
     if post_process {
         if let Some(processed_text) = post_process_transcription(&settings, &final_text).await {
             post_processed_text = Some(processed_text.clone());

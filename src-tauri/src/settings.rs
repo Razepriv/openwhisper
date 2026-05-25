@@ -480,6 +480,11 @@ pub struct AppSettings {
     /// Empty until the dictionary settings UI lands or the migration runs.
     #[serde(default)]
     pub dictionary_entries: Vec<crate::managers::dictionary::DictionaryEntry>,
+    /// OpenWhisper Phase 3.1: voice snippets — trigger phrases that expand
+    /// to user-defined text after transcription. See managers/snippets.rs
+    /// for the data shape + limits.
+    #[serde(default)]
+    pub snippets: Vec<crate::managers::snippets::Snippet>,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -886,6 +891,7 @@ pub fn get_default_settings() -> AppSettings {
         post_process_enabled: default_post_process_enabled(),
         cleanup_level: CleanupLevel::default(),
         dictionary_entries: Vec::new(),
+        snippets: Vec::new(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),
