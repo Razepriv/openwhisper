@@ -135,6 +135,30 @@ pub fn get_system_profile() -> Result<crate::system_probe::SystemProfile, String
     crate::system_probe::probe().map_err(|e| format!("system probe failed: {}", e))
 }
 
+/// OpenWhisper Phase 1.3: compute the recommended STT + LLM cleanup stack
+/// for the host system. Called by the onboarding UI to show "we picked X
+/// for your Y, downloading ~Z MB" before kicking off the model download.
+///
+/// `has_capable_gpu` and `ollama_detected` come from runtime probes
+/// (transcribe-rs GPU enumeration and the Ollama auto-detect flow in
+/// Phase 1.8). The command takes them as parameters so the frontend can
+/// surface "without GPU" or "without Ollama" preview stacks before the
+/// runtime probes complete.
+#[specta::specta]
+#[tauri::command]
+pub fn get_recommended_stack(
+    has_capable_gpu: bool,
+    ollama_detected: bool,
+) -> Result<crate::backend_resolver::Stack, String> {
+    let profile = crate::system_probe::probe()
+        .map_err(|e| format!("system probe failed: {}", e))?;
+    Ok(crate::backend_resolver::resolve(
+        &profile,
+        has_capable_gpu,
+        ollama_detected,
+    ))
+}
+
 /// Try to initialize Enigo (keyboard/mouse simulation).
 /// On macOS, this will return an error if accessibility permissions are not granted.
 #[specta::specta]

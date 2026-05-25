@@ -2,6 +2,7 @@ mod actions;
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 mod apple_intelligence;
 mod audio_feedback;
+mod backend_resolver;
 pub mod audio_toolkit;
 pub mod cli;
 mod clipboard;
@@ -389,6 +390,7 @@ pub fn run(cli_args: CliArgs) {
             commands::open_app_data_dir,
             commands::check_apple_intelligence_available,
             commands::get_system_profile,
+            commands::get_recommended_stack,
             commands::initialize_enigo,
             commands::initialize_shortcuts,
             commands::models::get_available_models,
