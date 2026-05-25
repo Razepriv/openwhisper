@@ -474,6 +474,12 @@ pub struct AppSettings {
     /// See `CleanupLevel` docs for the tier semantics.
     #[serde(default)]
     pub cleanup_level: CleanupLevel,
+    /// OpenWhisper Phase 2.1: structured Personal Dictionary replacing
+    /// the flat `custom_words: Vec<String>`. Migration from `custom_words`
+    /// runs lazily in the ModelManager (see managers/dictionary.rs docs).
+    /// Empty until the dictionary settings UI lands or the migration runs.
+    #[serde(default)]
+    pub dictionary_entries: Vec<crate::managers::dictionary::DictionaryEntry>,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -879,6 +885,7 @@ pub fn get_default_settings() -> AppSettings {
         auto_submit_key: AutoSubmitKey::default(),
         post_process_enabled: default_post_process_enabled(),
         cleanup_level: CleanupLevel::default(),
+        dictionary_entries: Vec::new(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),

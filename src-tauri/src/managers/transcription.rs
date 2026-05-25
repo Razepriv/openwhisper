@@ -540,14 +540,30 @@ impl TranscriptionManager {
                                 Some(normalized)
                             };
 
+                            // Phase 2.1: prefer the structured Personal
+                            // Dictionary when populated; fall back to the
+                            // legacy custom_words for users who haven't
+                            // migrated yet. The structured path honours
+                            // starred-first ordering + MAX_BIAS_TERMS cap.
+                            let initial_prompt = if !settings.dictionary_entries.is_empty() {
+                                let prompt = crate::managers::dictionary::build_initial_prompt(
+                                    &settings.dictionary_entries,
+                                );
+                                if prompt.is_empty() {
+                                    None
+                                } else {
+                                    Some(prompt)
+                                }
+                            } else if !settings.custom_words.is_empty() {
+                                Some(settings.custom_words.join(", "))
+                            } else {
+                                None
+                            };
+
                             let params = WhisperInferenceParams {
                                 language: whisper_language,
                                 translate: settings.translate_to_english,
-                                initial_prompt: if settings.custom_words.is_empty() {
-                                    None
-                                } else {
-                                    Some(settings.custom_words.join(", "))
-                                },
+                                initial_prompt,
                                 ..Default::default()
                             };
 
