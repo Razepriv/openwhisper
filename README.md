@@ -1,8 +1,27 @@
 # OpenWhisper
 
-**100% free, local-first, Wispr-Flow-class voice dictation for Mac, Windows, and Linux.**
+**100% local, 100% free, Wispr-Flow-class voice dictation for Mac, Windows, and Linux.**
 
-Hold a hotkey anywhere on your computer, speak naturally, and clean formatted text is pasted at your cursor. Your voice never leaves your machine. Zero subscription. Zero telemetry by default.
+Hold a hotkey anywhere on your computer, speak naturally, and clean formatted text is pasted at your cursor. Your voice never leaves your machine. Zero subscription. Zero telemetry. **Zero cloud, zero API.**
+
+## Privacy guarantee
+
+OpenWhisper performs **all** transcription and AI cleanup on your own machine:
+
+- **Speech recognition (Whisper / Parakeet / Moonshine)** — runs locally via `whisper.cpp` / `transcribe-rs`. The audio never hits the network.
+- **AI cleanup (the LLM pass)** — runs locally via one of:
+  - Apple Foundation Models (macOS 26+ on Apple Silicon) — OS-provided, on-device
+  - Phi Silica via Windows AI APIs (Windows 11 24H2+ on Copilot+ PCs) — OS-provided, on-device
+  - Bundled `llama.cpp` sidecar with Gemma 3 / Phi-4 mini / Llama 3.2 weights — runs on `127.0.0.1`
+  - Optional Ollama (if you've already installed it) — runs on `127.0.0.1`
+- **No cloud LLM providers ship with OpenWhisper.** The Handy upstream's OpenAI / Anthropic / Groq / Cerebras / Z.AI / OpenRouter / Bedrock-Mantle integrations were **removed** in Phase 1.10. Existing settings files that reference them are automatically migrated to local defaults on first launch.
+- **Hard-coded URL whitelist.** The LLM client (`src-tauri/src/llm_client.rs::validate_local_url`) rejects any base URL that is not `127.0.0.1`, `::1`, `localhost`, `apple-intelligence://`, or `phi-silica://`. A bug in settings cannot leak transcripts off the machine — the network call itself is blocked.
+
+The only network access OpenWhisper makes is for:
+1. Downloading model weights from Hugging Face on first run (one-time, no user data sent).
+2. Checking for app updates (opt-out in Settings).
+
+If you want a fully air-gapped install, pre-place the Whisper + GGUF model files into `~/.local/share/openwhisper/models/` (Linux), `~/Library/Application Support/openwhisper/models/` (macOS), or `%APPDATA%\openwhisper\models\` (Windows) before first launch, and disable update checks.
 
 > **Status:** Phase 0 — forked from [Handy](https://github.com/cjpais/Handy) (MIT) on 2026-05-24. Active development toward full Wispr Flow feature parity.
 

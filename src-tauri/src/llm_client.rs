@@ -105,6 +105,125 @@ fn create_client(provider: &PostProcessProvider, api_key: &str) -> Result<reqwes
         .map_err(|e| format!("Failed to build HTTP client: {}", e))
 }
 
+/// OpenWhisper local-only enforcement (Phase 1.10).
+///
+/// Returns `Ok(())` if `base_url` points at a loopback / on-device endpoint,
+/// `Err(reason)` otherwise. Called from `send_chat_completion_with_schema`
+/// to make it physically impossible for a misconfigured provider to leak
+/// transcribed text off the machine.
+///
+/// Accepted hosts:
+/// - `127.0.0.1`, `::1`, `[::1]`, `localhost` (loopback HTTP)
+/// - schemes that are clearly on-device pseudo-URLs (`apple-intelligence://`,
+///   `phi-silica://`)
+///
+/// Everything else — including private LAN ranges like `192.168.x.x` —
+/// is rejected. We are conservative on purpose: a user on a hotel
+/// network who accidentally types their colleague's LAN IP shouldn't be
+/// able to leak transcripts even by mistake. If a power user later wants
+/// to allow LAN endpoints they'll need to ship their own fork.
+pub fn validate_local_url(base_url: &str) -> Result<(), String> {
+    // On-device pseudo-URLs used by the OS-native LLM providers.
+    if base_url.starts_with("apple-intelligence://")
+        || base_url.starts_with("phi-silica://")
+    {
+        return Ok(());
+    }
+
+    // Everything else must be http:// or https:// to a loopback host.
+    let after_scheme = base_url
+        .strip_prefix("http://")
+        .or_else(|| base_url.strip_prefix("https://"))
+        .ok_or_else(|| {
+            format!(
+                "LOCAL-ONLY: rejecting URL '{}' — must use http://, https://, \
+                 apple-intelligence://, or phi-silica:// scheme",
+                base_url
+            )
+        })?;
+
+    // Strip path + query so we get just the authority (host[:port]).
+    let authority = after_scheme
+        .split('/')
+        .next()
+        .unwrap_or(after_scheme);
+
+    // Pull the host out of `host:port` (taking care with IPv6 brackets).
+    let host = if let Some(stripped) = authority.strip_prefix('[') {
+        // IPv6 literal like [::1]:8080
+        stripped.split(']').next().unwrap_or("")
+    } else {
+        authority.split(':').next().unwrap_or("")
+    };
+
+    const LOOPBACK_HOSTS: &[&str] = &["127.0.0.1", "::1", "localhost"];
+    if LOOPBACK_HOSTS.contains(&host) {
+        Ok(())
+    } else {
+        Err(format!(
+            "LOCAL-ONLY: rejecting URL '{}' — host '{}' is not a loopback address. \
+             OpenWhisper never sends transcribed text off the machine.",
+            base_url, host
+        ))
+    }
+}
+
+#[cfg(test)]
+mod url_validation_tests {
+    use super::validate_local_url;
+
+    #[test]
+    fn loopback_ipv4_is_allowed() {
+        assert!(validate_local_url("http://127.0.0.1:11434/v1").is_ok());
+        assert!(validate_local_url("http://127.0.0.1:8080/v1").is_ok());
+    }
+
+    #[test]
+    fn loopback_ipv6_is_allowed() {
+        assert!(validate_local_url("http://[::1]:11434/v1").is_ok());
+    }
+
+    #[test]
+    fn localhost_hostname_is_allowed() {
+        assert!(validate_local_url("http://localhost:11434/v1").is_ok());
+        assert!(validate_local_url("http://localhost/v1").is_ok());
+    }
+
+    #[test]
+    fn on_device_pseudo_urls_are_allowed() {
+        assert!(validate_local_url("apple-intelligence://local").is_ok());
+        assert!(validate_local_url("phi-silica://local").is_ok());
+    }
+
+    #[test]
+    fn public_https_endpoints_are_rejected() {
+        assert!(validate_local_url("https://api.openai.com/v1").is_err());
+        assert!(validate_local_url("https://api.anthropic.com/v1").is_err());
+        assert!(validate_local_url("https://api.groq.com/openai/v1").is_err());
+    }
+
+    #[test]
+    fn private_lan_addresses_are_rejected() {
+        // Conservative by design — see fn docs.
+        assert!(validate_local_url("http://192.168.1.50:11434/v1").is_err());
+        assert!(validate_local_url("http://10.0.0.5:8080/v1").is_err());
+        assert!(validate_local_url("http://172.16.0.1/v1").is_err());
+    }
+
+    #[test]
+    fn unknown_schemes_are_rejected() {
+        assert!(validate_local_url("ws://localhost/v1").is_err());
+        assert!(validate_local_url("file:///etc/passwd").is_err());
+    }
+
+    #[test]
+    fn lookalike_hostnames_are_rejected() {
+        // A subdomain trick like "localhost.evil.com" must NOT pass.
+        assert!(validate_local_url("http://localhost.evil.com/v1").is_err());
+        assert!(validate_local_url("http://127.0.0.1.evil.com/v1").is_err());
+    }
+}
+
 /// Send a chat completion request to an OpenAI-compatible API
 /// Returns Ok(Some(content)) on success, Ok(None) if response has no content,
 /// or Err on actual errors (HTTP, parsing, etc.)
@@ -145,6 +264,11 @@ pub async fn send_chat_completion_with_schema(
     reasoning: Option<ReasoningConfig>,
 ) -> Result<Option<String>, String> {
     let base_url = provider.base_url.trim_end_matches('/');
+    // OpenWhisper Phase 1.10: hard local-only enforcement at the request
+    // boundary. If we ever ship a config bug that lets a cloud URL into
+    // the provider list, this still blocks the actual network call so
+    // transcribed text can't leak.
+    validate_local_url(base_url)?;
     let url = format!("{}/chat/completions", base_url);
 
     debug!("Sending chat completion request to: {}", url);
@@ -223,6 +347,10 @@ pub async fn fetch_models(
     api_key: String,
 ) -> Result<Vec<String>, String> {
     let base_url = provider.base_url.trim_end_matches('/');
+    // OpenWhisper Phase 1.10: same local-only enforcement as the
+    // chat-completion path. Without this, a malformed provider could
+    // leak the user's API key just by enumerating /models.
+    validate_local_url(base_url)?;
     let url = format!("{}/models", base_url);
 
     debug!("Fetching models from: {}", url);

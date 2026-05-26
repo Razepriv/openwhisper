@@ -613,71 +613,78 @@ fn default_show_tray_icon() -> bool {
     true
 }
 
+/// Provider id of the bundled llama.cpp sidecar (Phase 1.6). Default
+/// fallback when no OS-native local LLM is available.
+pub const LLAMA_SIDECAR_PROVIDER_ID: &str = "llama_cpp_sidecar";
+/// Provider id for the Windows AI Phi Silica local LLM (Win 11 24H2+ on
+/// Copilot+ PCs).
+pub const PHI_SILICA_PROVIDER_ID: &str = "phi_silica";
+/// Provider id for a pre-installed Ollama runtime running on localhost.
+pub const OLLAMA_PROVIDER_ID: &str = "ollama_local";
+/// Custom local provider — user can point at any OTHER localhost LLM
+/// server they're running (e.g. LM Studio, custom llama.cpp). The
+/// llm_client URL whitelist rejects non-localhost endpoints.
+pub const CUSTOM_LOCAL_PROVIDER_ID: &str = "custom_local";
+
+/// Set of legacy cloud provider ids that we want to actively REMOVE from
+/// any persisted settings file when the user upgrades to OpenWhisper.
+/// See `migrate_legacy_cloud_providers` for the rewriter.
+pub const LEGACY_CLOUD_PROVIDER_IDS: &[&str] = &[
+    "openai",
+    "zai",
+    "openrouter",
+    "anthropic",
+    "groq",
+    "cerebras",
+    "bedrock_mantle",
+    "custom", // ambiguous default that used to point at localhost OR cloud
+];
+
 fn default_post_process_provider_id() -> String {
-    "openai".to_string()
+    // Apple Intelligence preferred on macOS arm64 (zero disk cost). Phi
+    // Silica preferred on Windows (also zero disk cost — provided the
+    // user is on a Copilot+ PC). Both fall through to the bundled
+    // llama.cpp sidecar at runtime when their OS API is unavailable.
+    #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+    {
+        return APPLE_INTELLIGENCE_PROVIDER_ID.to_string();
+    }
+    #[cfg(target_os = "windows")]
+    {
+        return PHI_SILICA_PROVIDER_ID.to_string();
+    }
+    #[cfg(not(any(all(target_os = "macos", target_arch = "aarch64"), target_os = "windows")))]
+    {
+        LLAMA_SIDECAR_PROVIDER_ID.to_string()
+    }
 }
 
+/// LOCAL-ONLY post-process providers.
+///
+/// OpenWhisper's privacy guarantee (per research/08-decisions.md decision B3 +
+/// the user directive of 2026-05-25) is that **no transcribed text ever
+/// leaves the machine**. Every entry below is either:
+/// - an OS-provided on-device LLM (Apple Foundation Models, Windows
+///   Phi Silica), or
+/// - a process running on `localhost` (bundled llama.cpp sidecar, Ollama,
+///   user's custom localhost LLM server).
+///
+/// The cloud providers Handy used to ship (OpenAI / Anthropic / Groq /
+/// Cerebras / Z.AI / OpenRouter / Bedrock-Mantle) are intentionally
+/// REMOVED. To stop a determined user from re-adding them, the URL
+/// validator in `llm_client.rs::validate_local_url` blocks any base_url
+/// whose host is not `127.0.0.1` / `::1` / `localhost`.
 fn default_post_process_providers() -> Vec<PostProcessProvider> {
-    let mut providers = vec![
-        PostProcessProvider {
-            id: "openai".to_string(),
-            label: "OpenAI".to_string(),
-            base_url: "https://api.openai.com/v1".to_string(),
-            allow_base_url_edit: false,
-            models_endpoint: Some("/models".to_string()),
-            supports_structured_output: true,
-        },
-        PostProcessProvider {
-            id: "zai".to_string(),
-            label: "Z.AI".to_string(),
-            base_url: "https://api.z.ai/api/paas/v4".to_string(),
-            allow_base_url_edit: false,
-            models_endpoint: Some("/models".to_string()),
-            supports_structured_output: true,
-        },
-        PostProcessProvider {
-            id: "openrouter".to_string(),
-            label: "OpenRouter".to_string(),
-            base_url: "https://openrouter.ai/api/v1".to_string(),
-            allow_base_url_edit: false,
-            models_endpoint: Some("/models".to_string()),
-            supports_structured_output: true,
-        },
-        PostProcessProvider {
-            id: "anthropic".to_string(),
-            label: "Anthropic".to_string(),
-            base_url: "https://api.anthropic.com/v1".to_string(),
-            allow_base_url_edit: false,
-            models_endpoint: Some("/models".to_string()),
-            supports_structured_output: false,
-        },
-        PostProcessProvider {
-            id: "groq".to_string(),
-            label: "Groq".to_string(),
-            base_url: "https://api.groq.com/openai/v1".to_string(),
-            allow_base_url_edit: false,
-            models_endpoint: Some("/models".to_string()),
-            supports_structured_output: false,
-        },
-        PostProcessProvider {
-            id: "cerebras".to_string(),
-            label: "Cerebras".to_string(),
-            base_url: "https://api.cerebras.ai/v1".to_string(),
-            allow_base_url_edit: false,
-            models_endpoint: Some("/models".to_string()),
-            supports_structured_output: true,
-        },
-    ];
+    let mut providers = Vec::new();
 
-    // Note: We always include Apple Intelligence on macOS ARM64 without checking availability
-    // at startup. The availability check is deferred to when the user actually tries to use it
-    // (in actions.rs). This prevents crashes on macOS 26.x beta where accessing
-    // SystemLanguageModel.default during early app initialization causes SIGABRT.
+    // Apple Foundation Models — macOS arm64 only. Always-defined on this
+    // target; availability is checked at use time (see actions.rs) to
+    // avoid early-init SIGABRT on macOS 26.x betas.
     #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
     {
         providers.push(PostProcessProvider {
             id: APPLE_INTELLIGENCE_PROVIDER_ID.to_string(),
-            label: "Apple Intelligence".to_string(),
+            label: "Apple Foundation Models (on-device)".to_string(),
             base_url: "apple-intelligence://local".to_string(),
             allow_base_url_edit: false,
             models_endpoint: None,
@@ -685,27 +692,107 @@ fn default_post_process_providers() -> Vec<PostProcessProvider> {
         });
     }
 
-    // AWS Bedrock via Mantle (OpenAI-compatible endpoint)
+    // Phi Silica — Windows 11 24H2+ on Copilot+ NPU. Always-defined on
+    // Windows; availability is checked at use time via the Windows AI
+    // APIs.
+    #[cfg(target_os = "windows")]
+    {
+        providers.push(PostProcessProvider {
+            id: PHI_SILICA_PROVIDER_ID.to_string(),
+            label: "Phi Silica (Windows AI, on-device)".to_string(),
+            base_url: "phi-silica://local".to_string(),
+            allow_base_url_edit: false,
+            models_endpoint: None,
+            supports_structured_output: false,
+        });
+    }
+
+    // Bundled llama.cpp sidecar — default fallback on every platform.
+    // The runtime spawns `llama-server` against the downloaded LLM
+    // weights and exposes an OpenAI-compatible HTTP endpoint on a
+    // localhost port chosen by `LlamaSidecar::find_free_port` (see
+    // llama_sidecar.rs).
     providers.push(PostProcessProvider {
-        id: "bedrock_mantle".to_string(),
-        label: "AWS Bedrock (Mantle)".to_string(),
-        base_url: "https://bedrock-mantle.us-east-1.api.aws/v1".to_string(),
+        id: LLAMA_SIDECAR_PROVIDER_ID.to_string(),
+        label: "Bundled llama.cpp (local)".to_string(),
+        // base_url is filled in at runtime once the sidecar starts and
+        // the port is known. Anything non-loopback here would be
+        // rejected by validate_local_url at request time.
+        base_url: "http://127.0.0.1:0/v1".to_string(),
         allow_base_url_edit: false,
         models_endpoint: Some("/models".to_string()),
         supports_structured_output: true,
     });
 
-    // Custom provider always comes last
+    // Ollama — only meaningful when the Ollama auto-detect (Phase 1.8)
+    // reports it as installed, but we expose the provider entry
+    // unconditionally so the BackendResolver can upgrade routing at
+    // runtime without re-mutating the settings file.
     providers.push(PostProcessProvider {
-        id: "custom".to_string(),
-        label: "Custom".to_string(),
+        id: OLLAMA_PROVIDER_ID.to_string(),
+        label: "Ollama (local, if installed)".to_string(),
         base_url: "http://localhost:11434/v1".to_string(),
+        allow_base_url_edit: false,
+        models_endpoint: Some("/models".to_string()),
+        supports_structured_output: true,
+    });
+
+    // Power-user escape hatch: point at any OTHER localhost LLM server
+    // (LM Studio at :1234, custom llama.cpp build, etc.). The URL
+    // whitelist still rejects non-loopback hosts even when this is
+    // selected.
+    providers.push(PostProcessProvider {
+        id: CUSTOM_LOCAL_PROVIDER_ID.to_string(),
+        label: "Custom (localhost only)".to_string(),
+        base_url: "http://127.0.0.1:8080/v1".to_string(),
         allow_base_url_edit: true,
         models_endpoint: Some("/models".to_string()),
         supports_structured_output: false,
     });
 
     providers
+}
+
+/// Rewrite stale cloud-provider selections to a safe local default.
+/// Called from the settings load path so that a user who upgraded from
+/// the Handy-derived cloud defaults lands on a local provider instead
+/// of a broken/cloud one.
+pub fn migrate_legacy_cloud_providers(settings: &mut AppSettings) {
+    if LEGACY_CLOUD_PROVIDER_IDS.contains(&settings.post_process_provider_id.as_str()) {
+        log::info!(
+            "OpenWhisper: replacing legacy cloud provider '{}' with default local provider",
+            settings.post_process_provider_id
+        );
+        settings.post_process_provider_id = default_post_process_provider_id();
+    }
+
+    // Drop legacy cloud providers from the list (they would otherwise
+    // still appear in the post-process UI dropdown after migration).
+    let before = settings.post_process_providers.len();
+    settings
+        .post_process_providers
+        .retain(|p| !LEGACY_CLOUD_PROVIDER_IDS.contains(&p.id.as_str()));
+    let removed = before.saturating_sub(settings.post_process_providers.len());
+    if removed > 0 {
+        log::info!(
+            "OpenWhisper: removed {} legacy cloud provider(s) from settings",
+            removed
+        );
+    }
+
+    // Backfill: ensure every local provider in the new defaults is
+    // present. This re-adds missing entries without disturbing user
+    // customisations.
+    let existing: std::collections::HashSet<String> = settings
+        .post_process_providers
+        .iter()
+        .map(|p| p.id.clone())
+        .collect();
+    for provider in default_post_process_providers() {
+        if !existing.contains(&provider.id) {
+            settings.post_process_providers.push(provider);
+        }
+    }
 }
 
 fn default_post_process_api_keys() -> SecretMap {
@@ -751,7 +838,17 @@ fn default_typing_tool() -> TypingTool {
 }
 
 fn ensure_post_process_defaults(settings: &mut AppSettings) -> bool {
-    let mut changed = false;
+    // OpenWhisper Phase 1.10: strip any legacy cloud providers + rewrite
+    // the selected provider id BEFORE syncing defaults. This makes the
+    // ordering deterministic: defaults sync re-adds whatever
+    // migrate_legacy_cloud_providers removed, so the resulting list is
+    // always the current local-only set.
+    let pre_provider_id = settings.post_process_provider_id.clone();
+    let pre_provider_len = settings.post_process_providers.len();
+    migrate_legacy_cloud_providers(settings);
+    let mut changed = settings.post_process_provider_id != pre_provider_id
+        || settings.post_process_providers.len() != pre_provider_len;
+
     for provider in default_post_process_providers() {
         // Use match to do a single lookup - either sync existing or add new
         match settings
