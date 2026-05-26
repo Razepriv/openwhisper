@@ -42,3 +42,14 @@ blob-report/
 
 # Nix build output
 result
+
+# OpenWhisper release signing — private keys must NEVER be committed.
+# See SIGNING.md for key management. The standard location is
+# ~/.openwhisper/updater.key on the release manager's machine; the
+# entries below are belt-and-suspenders for accidental drag-and-drop
+# of a key file INTO the repo.
+*.key
+!**/icons/*.key
+updater.key*
+.openwhisper/
+
