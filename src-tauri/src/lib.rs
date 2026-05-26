@@ -5,6 +5,8 @@ mod apple_intelligence;
 mod audio_feedback;
 mod auto_provisioner;
 mod backend_resolver;
+mod command_mode;
+mod transforms;
 mod vibe_coding;
 pub mod audio_toolkit;
 pub mod cli;
