@@ -1,6 +1,18 @@
 import React from "react";
 import { useTranslation } from "react-i18next";
-import { Cog, FlaskConical, History, Info, Sparkles, Cpu } from "lucide-react";
+import {
+  Cog,
+  FlaskConical,
+  History,
+  Info,
+  Sparkles,
+  Cpu,
+  BookText,
+  Scissors,
+  Wand2,
+  BarChart3,
+  StickyNote,
+} from "lucide-react";
 import HandyTextLogo from "./icons/HandyTextLogo";
 import HandyHand from "./icons/HandyHand";
 import { useSettings } from "../hooks/useSettings";
@@ -12,6 +24,11 @@ import {
   AboutSettings,
   PostProcessingSettings,
   ModelsSettings,
+  SnippetsSettings,
+  DictionarySettings,
+  TransformsSettings,
+  InsightsSettings,
+  NotesSettings,
 } from "./settings";
 
 export type SidebarSection = keyof typeof SECTIONS_CONFIG;
@@ -42,6 +59,37 @@ export const SECTIONS_CONFIG = {
     labelKey: "sidebar.models",
     icon: Cpu,
     component: ModelsSettings,
+    enabled: () => true,
+  },
+  // OpenWhisper-added sections — backend wired via commands/openwhisper.rs.
+  dictionary: {
+    labelKey: "sidebar.dictionary",
+    icon: BookText,
+    component: DictionarySettings,
+    enabled: () => true,
+  },
+  snippets: {
+    labelKey: "sidebar.snippets",
+    icon: Scissors,
+    component: SnippetsSettings,
+    enabled: () => true,
+  },
+  transforms: {
+    labelKey: "sidebar.transforms",
+    icon: Wand2,
+    component: TransformsSettings,
+    enabled: () => true,
+  },
+  insights: {
+    labelKey: "sidebar.insights",
+    icon: BarChart3,
+    component: InsightsSettings,
+    enabled: () => true,
+  },
+  notes: {
+    labelKey: "sidebar.notes",
+    icon: StickyNote,
+    component: NotesSettings,
     enabled: () => true,
   },
   advanced: {

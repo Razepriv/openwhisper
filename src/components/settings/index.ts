@@ -6,6 +6,12 @@ export { HistorySettings } from "./history/HistorySettings";
 export { AboutSettings } from "./about/AboutSettings";
 export { PostProcessingSettings } from "./post-processing/PostProcessingSettings";
 export { ModelsSettings } from "./models/ModelsSettings";
+// OpenWhisper-added sections (Wispr-parity surface):
+export { SnippetsSettings } from "./snippets/SnippetsSettings";
+export { DictionarySettings } from "./dictionary/DictionarySettings";
+export { TransformsSettings } from "./transforms/TransformsSettings";
+export { InsightsSettings } from "./insights/InsightsSettings";
+export { NotesSettings } from "./notes/NotesSettings";
 
 // Individual setting components
 export { MicrophoneSelector } from "./MicrophoneSelector";

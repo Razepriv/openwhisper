@@ -15,7 +15,20 @@
     "postProcessing": "Post Process",
     "history": "History",
     "debug": "Debug",
-    "about": "About"
+    "about": "About",
+    "dictionary": "Dictionary",
+    "snippets": "Snippets",
+    "transforms": "Transforms",
+    "insights": "Insights",
+    "notes": "Notes"
+  },
+  "common": {
+    "cancel": "Cancel",
+    "close": "Close",
+    "loading": "Loading…",
+    "edit": "Edit",
+    "delete": "Delete",
+    "save": "Save"
   },
   "onboarding": {
     "subtitle": "To get started, choose a transcription model",
@@ -175,6 +188,124 @@
     "modelSettings": {
       "title": "{{model}} Settings",
       "noSettingsNeeded": "This model works automatically with no configuration needed."
+    },
+    "snippets": {
+      "title": "Snippets",
+      "description": "Trigger phrases that expand to text after you dictate.",
+      "add": "Add snippet",
+      "update": "Update snippet",
+      "listTitle": "Saved snippets ({{count}})",
+      "empty": "No snippets yet. Add one above to expand dictated phrases automatically.",
+      "triggerPlaceholder": "Trigger phrase (e.g. my email)",
+      "expansionPlaceholder": "Expansion text (max 4000 chars)",
+      "errors": {
+        "load": "Could not load snippets",
+        "save": "Could not save snippet",
+        "delete": "Could not delete snippet",
+        "required": "Trigger and expansion are required"
+      }
+    },
+    "dictionary": {
+      "title": "Personal Dictionary",
+      "description": "Help Whisper recognise the words you use. Starred entries get priority when the prompt budget is tight.",
+      "add": "Add term",
+      "update": "Update term",
+      "listTitle": "Saved terms ({{count}})",
+      "empty": "No terms yet. Add jargon, names, or technical words you use often.",
+      "termPlaceholder": "Term (e.g. Sarbanes-Oxley)",
+      "replacementPlaceholder": "Replacement (optional — overrides fuzzy matches)",
+      "starredLabel": "Star (prioritise in bias prompt)",
+      "source": {
+        "manual": "Added manually",
+        "migrated": "Migrated from legacy",
+        "learned": "Auto-learned",
+        "imported": "Bulk-imported"
+      },
+      "errors": {
+        "load": "Could not load dictionary",
+        "save": "Could not save term",
+        "delete": "Could not delete term",
+        "termRequired": "Term must not be empty"
+      }
+    },
+    "transforms": {
+      "title": "Transforms",
+      "description": "User-defined rewrites triggered by a hotkey after dictation.",
+      "add": "Add transform",
+      "update": "Update transform",
+      "listTitle": "Saved transforms ({{count}})",
+      "empty": "No transforms yet. The Polish and Prompt Engineer defaults ship with every install.",
+      "namePlaceholder": "Name (e.g. Polish)",
+      "promptPlaceholder": "Prompt body — use {TEXT} where the dictated text should go",
+      "hotkeyPlaceholder": "Hotkey (e.g. Ctrl+Alt+1) — optional",
+      "preview": "Preview prompt",
+      "previewTitle": "Prompt preview",
+      "previewSamplePlaceholder": "Sample dictated text",
+      "errors": {
+        "load": "Could not load transforms",
+        "save": "Could not save transform",
+        "delete": "Could not delete transform",
+        "preview": "Could not render preview",
+        "required": "Name and prompt are required"
+      }
+    },
+    "insights": {
+      "title": "Voice Profile",
+      "description": "Local-only analytics of your dictation patterns. Never aggregated to a server.",
+      "summary": "Summary",
+      "refresh": "Refresh",
+      "totalWords": "Total words",
+      "totalSessions": "Sessions",
+      "wpm": "Words / min",
+      "currentStreak_one": "Day streak",
+      "currentStreak_other": "Day streak",
+      "currentStreak": "Day streak",
+      "longestStreak_one": "Longest streak so far: {{count}} day",
+      "longestStreak_other": "Longest streak so far: {{count}} days",
+      "longestStreak": "Longest streak so far: {{count}} days",
+      "topWordsTitle": "Top phrases",
+      "last30DaysTitle": "Last 30 days",
+      "dailyHint": "Words dictated per day — left = older, right = today.",
+      "hourlyTitle": "Peak hours",
+      "hourlyHint": "Words dictated per hour-of-day (your local time).",
+      "errors": {
+        "load": "Could not load voice profile"
+      }
+    },
+    "notes": {
+      "title": "Scratchpad",
+      "description": "Local markdown notes — never synced to a cloud.",
+      "create": "Save note",
+      "update": "Update note",
+      "listTitle": "Saved notes ({{count}})",
+      "empty": "No notes yet. Capture a thought above and it stays on this machine.",
+      "titlePlaceholder": "Note title",
+      "bodyPlaceholder": "Markdown body…",
+      "errors": {
+        "load": "Could not load notes",
+        "save": "Could not save note",
+        "delete": "Could not delete note",
+        "titleRequired": "Note title must not be empty"
+      }
+    },
+    "cleanupLevel": {
+      "title": "Auto-Cleanup",
+      "description": "How aggressively the local LLM cleans up dictated text. Higher = more rewriting, slightly more latency.",
+      "none": "Off — raw Whisper output",
+      "light": "Light — capitalisation + punctuation only",
+      "medium": "Medium — also remove filler words",
+      "high": "High — restructure sentences for clarity"
+    },
+    "floatingWidget": {
+      "title": "Floating Widget",
+      "description": "Show a persistent on-screen widget you can click to start dictation. Tracks the current state (idle / recording / processing).",
+      "enable": "Show floating widget",
+      "position": "Widget position",
+      "positionTop": "Top",
+      "positionBottom": "Bottom",
+      "positionHidden": "Hidden (use tray instead)",
+      "opacity": "Opacity",
+      "alwaysOnTop": "Always on top of other windows"
     },
     "general": {
       "title": "General",
@@ -628,6 +759,12 @@
   },
   "overlay": {
     "transcribing": "Transcribing...",
-    "processing": "Processing..."
+    "processing": "Processing...",
+    "idle": "Ready",
+    "recording": "Recording",
+    "clickToDictate": "Click to dictate",
+    "showWidget": "Show floating widget",
+    "widgetPosition": "Widget position",
+    "widgetOpacity": "Widget opacity"
   }
 }
