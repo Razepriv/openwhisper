@@ -1,7 +1,9 @@
 pub mod audio;
 pub mod dictionary;
 pub mod history;
+pub mod insights;
 pub mod model;
 pub mod model_manifest;
+pub mod notes;
 pub mod snippets;
 pub mod transcription;
