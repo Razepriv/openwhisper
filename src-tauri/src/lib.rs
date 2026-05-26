@@ -1,9 +1,11 @@
 mod actions;
+mod active_app;
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 mod apple_intelligence;
 mod audio_feedback;
 mod auto_provisioner;
 mod backend_resolver;
+mod vibe_coding;
 pub mod audio_toolkit;
 pub mod cli;
 mod clipboard;
