@@ -485,6 +485,11 @@ pub struct AppSettings {
     /// for the data shape + limits.
     #[serde(default)]
     pub snippets: Vec<crate::managers::snippets::Snippet>,
+    /// OpenWhisper Phase 7.2: hotkey-bound post-dictation rewrites.
+    /// See `transforms.rs` for the data shape. Defaults to the
+    /// "Polish" + "Prompt Engineer" pair shipped with every install.
+    #[serde(default = "default_transforms")]
+    pub transforms: Vec<crate::transforms::TransformBinding>,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -601,6 +606,12 @@ fn default_sound_theme() -> SoundTheme {
 
 fn default_post_process_enabled() -> bool {
     false
+}
+
+/// Wrapper used by the `#[serde(default = ...)]` attribute on
+/// `AppSettings::transforms`. Forwards to the module's public default.
+fn default_transforms() -> Vec<crate::transforms::TransformBinding> {
+    crate::transforms::default_transforms()
 }
 
 fn default_app_language() -> String {
@@ -989,6 +1000,7 @@ pub fn get_default_settings() -> AppSettings {
         cleanup_level: CleanupLevel::default(),
         dictionary_entries: Vec::new(),
         snippets: Vec::new(),
+        transforms: default_transforms(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),

@@ -214,6 +214,27 @@ impl HistoryManager {
         &self.recordings_dir
     }
 
+    /// Fetch the entire `transcription_history` table for analytics use
+    /// (Insights / Voice Profile dashboard — see managers/insights.rs).
+    ///
+    /// Synchronous + un-paginated. Safe because the DB is local + the
+    /// user's own data; even after years of heavy use the table is
+    /// O(tens of thousands of rows) which is single-digit milliseconds
+    /// to read. The paginated `get_history_entries` remains the right
+    /// call for the history list UI; this is the analytics fast-path.
+    pub fn get_all_entries(&self) -> Result<Vec<HistoryEntry>> {
+        let conn = self.get_connection()?;
+        let mut stmt = conn.prepare(
+            "SELECT id, file_name, timestamp, saved, title, transcription_text, \
+             post_processed_text, post_process_prompt, post_process_requested \
+             FROM transcription_history ORDER BY id DESC",
+        )?;
+        let rows = stmt
+            .query_map([], Self::map_history_entry)?
+            .collect::<std::result::Result<Vec<_>, _>>()?;
+        Ok(rows)
+    }
+
     /// Save a new history entry to the database.
     /// The WAV file should already have been written to the recordings directory.
     pub fn save_entry(
