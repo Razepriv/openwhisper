@@ -185,13 +185,18 @@ function App() {
     // registered), we still drop the user onto the accessibility step
     // so they get a usable UI rather than an infinite white screen.
     const TIMEOUT_MS = 6000;
-    type Result = { status: "ok"; data: boolean } | { status: "error"; error: string };
-    const probe = commands.hasAnyModelsAvailable() as unknown as Promise<Result>;
+    type Result =
+      | { status: "ok"; data: boolean }
+      | { status: "error"; error: string };
+    const probe =
+      commands.hasAnyModelsAvailable() as unknown as Promise<Result>;
     const timeout = new Promise<{ status: "timeout" }>((resolve) =>
       setTimeout(() => resolve({ status: "timeout" }), TIMEOUT_MS),
     );
     try {
-      const result = (await Promise.race([probe, timeout])) as Result | { status: "timeout" };
+      const result = (await Promise.race([probe, timeout])) as
+        | Result
+        | { status: "timeout" };
       if (result.status === "timeout") {
         console.warn(
           "hasAnyModelsAvailable did not respond within",
@@ -300,12 +305,29 @@ function App() {
   // white screen). The check is timed out at 6s so this state is never
   // permanent.
   if (onboardingStep === null) {
+    // Phase Final.Web diagnostic: bright, theme-independent colors so
+    // we can't mistake this state for a blank/broken render. If user
+    // sees ORANGE, React is mounted and onboardingStep just hasn't
+    // resolved yet (6s timeout, then falls to "accessibility").
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-text gap-3">
+      <div
+        style={{
+          minHeight: "100vh",
+          display: "flex",
+          flexDirection: "column",
+          alignItems: "center",
+          justifyContent: "center",
+          gap: "12px",
+          background: "#ff7a00",
+          color: "#000",
+          fontFamily: "Segoe UI, system-ui, sans-serif",
+        }}
+      >
         {/* eslint-disable-next-line i18next/no-literal-string */}
-        <div className="text-lg font-semibold">OpenWhisper</div>
-        <div className="text-sm text-mid-gray animate-pulse">
-          {t("common.loading", "Loading…")}
+        <div style={{ fontSize: "20px", fontWeight: 700 }}>OpenWhisper</div>
+        {/* eslint-disable-next-line i18next/no-literal-string */}
+        <div style={{ fontSize: "14px", opacity: 0.8 }}>
+          Loading… (React mounted, waiting for backend)
         </div>
       </div>
     );
