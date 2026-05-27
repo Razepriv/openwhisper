@@ -456,3 +456,13 @@ pub fn prepare_command_mode(
 ) -> Result<crate::command_mode::CommandModeRequest, String> {
     crate::command_mode::prepare(selection, instruction).map_err(|e| format!("{}", e))
 }
+
+/// Trigger dictation from a UI affordance — e.g. clicking the floating
+/// widget when it's in its idle state. Equivalent to pressing the
+/// configured push-to-talk shortcut. Idempotent — if a dictation is
+/// already in flight, the coordinator collapses the call.
+#[specta::specta]
+#[tauri::command]
+pub fn trigger_dictation_from_widget(app: AppHandle) {
+    crate::signal_handle::send_transcription_input(&app, "transcribe", "FloatingWidget");
+}

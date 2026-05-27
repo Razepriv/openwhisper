@@ -553,6 +553,65 @@ pub fn change_overlay_position_setting(app: AppHandle, position: String) -> Resu
     // Update overlay position without recreating window
     crate::utils::update_overlay_position(&app);
 
+    // OpenWhisper Phase UI.batch: if the user disables the overlay
+    // entirely we also want to make sure any visible idle widget is
+    // hidden; if they re-enable it we should resurrect it. Easiest path:
+    // re-run the idle bootstrap, which is a no-op when the widget is
+    // disabled.
+    crate::overlay::show_idle_widget(&app);
+
+    Ok(())
+}
+
+/// OpenWhisper Phase UI.batch — toggle the persistent floating widget.
+/// When enabled, the recording overlay stays on-screen in an "idle"
+/// clickable state between dictations (Wispr Flow's Flow Bar pattern).
+/// Disabling falls back to the legacy show-only-during-recording flow.
+#[tauri::command]
+#[specta::specta]
+pub fn change_floating_widget_enabled_setting(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.floating_widget_enabled = enabled;
+    settings::write_settings(&app, settings);
+
+    if enabled {
+        // Bring the widget up immediately so the toggle feels instant.
+        crate::overlay::show_idle_widget(&app);
+    } else if let Some(overlay_window) =
+        tauri::Manager::get_webview_window(&app, "recording_overlay")
+    {
+        // Tear the widget down — `hide_recording_overlay` would no-op
+        // here because the floating_widget_enabled flag is now false,
+        // so we already get the legacy hide path; force-hide as well to
+        // cover the case where the widget was visible in idle state.
+        let _ = overlay_window.hide();
+    }
+
+    Ok(())
+}
+
+/// OpenWhisper Phase UI.batch — set the floating widget's idle-state
+/// opacity. The backend clamps to [0.2, 1.0] to keep the widget
+/// visible (0.0 would make it disappear and confuse users). The
+/// updated value is pushed to the overlay window immediately via the
+/// `overlay-config` event so the user sees the change without
+/// re-triggering a dictation.
+#[tauri::command]
+#[specta::specta]
+pub fn change_floating_widget_opacity_setting(
+    app: AppHandle,
+    opacity: f32,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.floating_widget_opacity = opacity.clamp(0.2_f32, 1.0_f32);
+    settings::write_settings(&app, settings);
+
+    // Push live to the overlay so the slider reflects immediately.
+    crate::overlay::emit_overlay_config(&app);
+
     Ok(())
 }
 

@@ -301,6 +301,18 @@ fn initialize_core_logic(app_handle: &AppHandle) {
 
     // Create the recording overlay window (hidden by default)
     utils::create_recording_overlay(app_handle);
+
+    // OpenWhisper: if the user has the persistent floating widget
+    // enabled (default on Win + Mac), show it in idle state right
+    // away so it's available for click-to-dictate without waiting
+    // for the first hotkey press.
+    let app_handle_for_widget = app_handle.clone();
+    std::thread::spawn(move || {
+        // Small delay so the overlay window has finished its async
+        // construction in `create_recording_overlay` above.
+        std::thread::sleep(std::time::Duration::from_millis(500));
+        overlay::show_idle_widget(&app_handle_for_widget);
+    });
 }
 
 #[tauri::command]
@@ -344,6 +356,8 @@ pub fn run(cli_args: CliArgs) {
             shortcut::change_translate_to_english_setting,
             shortcut::change_selected_language_setting,
             shortcut::change_overlay_position_setting,
+            shortcut::change_floating_widget_enabled_setting,
+            shortcut::change_floating_widget_opacity_setting,
             shortcut::change_debug_mode_setting,
             shortcut::change_word_correction_threshold_setting,
             shortcut::change_extra_recording_buffer_setting,
@@ -464,6 +478,7 @@ pub fn run(cli_args: CliArgs) {
             commands::openwhisper::apply_vibe_coding,
             commands::openwhisper::get_active_app,
             commands::openwhisper::prepare_command_mode,
+            commands::openwhisper::trigger_dictation_from_widget,
         ])
         .events(collect_events![managers::history::HistoryUpdatePayload,]);
 

@@ -367,6 +367,34 @@ pub(crate) async fn process_transcription_output(
         final_text = crate::managers::snippets::expand(&final_text, &settings.snippets);
     }
 
+    // Phase 6 (Vibe Coding) — per-dictation per-app routing. We snapshot
+    // the focused app exactly once here, before any LLM call, so the
+    // routing decision is consistent for the rest of this dictation.
+    // `active_app::detect()` is cheap (≤30 ms) and never panics.
+    //
+    // When the focused app is a known IDE or coding-agent terminal,
+    // `vibe_coding::apply` rewrites the text in place — file-tagging in
+    // both contexts, backtick wrapping of identifiers in IDEs only. On
+    // every other app (browsers, mail, docs…) `apply` is a no-op.
+    //
+    // `known_symbols` is empty here — symbol extraction from the
+    // focused editor's accessibility tree is a follow-up wired through
+    // the same call path once that probe lands. The function tolerates
+    // an empty list and simply skips the variable-recognition pass.
+    let active_app = crate::active_app::detect();
+    if !active_app.is_empty() {
+        let rewritten = crate::vibe_coding::apply(&final_text, &active_app, &[]);
+        if rewritten != final_text {
+            debug!(
+                "Vibe Coding rewrote transcription for app '{}' ({} → {} chars)",
+                active_app.process_name,
+                final_text.len(),
+                rewritten.len()
+            );
+            final_text = rewritten;
+        }
+    }
+
     if post_process {
         if let Some(processed_text) = post_process_transcription(&settings, &final_text).await {
             post_processed_text = Some(processed_text.clone());

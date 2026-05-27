@@ -335,7 +335,32 @@ fn show_overlay_state(app_handle: &AppHandle, state: &str) {
         #[cfg(target_os = "windows")]
         force_overlay_topmost(&overlay_window);
 
+        // Push the latest floating-widget config first so the React side
+        // can apply opacity before the state-driven re-render kicks in.
+        emit_overlay_config(app_handle);
         let _ = overlay_window.emit("show-overlay", state);
+    }
+}
+
+/// Pushes user-controlled overlay appearance settings (currently just
+/// `floating_widget_opacity`) into the overlay window. The overlay
+/// React app maps these onto CSS custom properties so we can re-skin
+/// the widget without rebuilding the webview.
+///
+/// Called every time the overlay is shown or the relevant settings
+/// change. Cheap — just emits a Tauri event.
+pub fn emit_overlay_config(app_handle: &AppHandle) {
+    let settings = settings::get_settings(app_handle);
+    // Clamp defensively — the settings layer also clamps on write, but
+    // legacy persisted values (or hand-edited config) might fall outside
+    // [0.2, 1.0]. 0.2 keeps the widget visible; 1.0 is fully opaque.
+    let opacity = settings.floating_widget_opacity.clamp(0.2_f32, 1.0_f32);
+    let payload = serde_json::json!({
+        "floating_widget_enabled": settings.floating_widget_enabled,
+        "floating_widget_opacity": opacity,
+    });
+    if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
+        let _ = overlay_window.emit("overlay-config", payload);
     }
 }
 
@@ -369,10 +394,27 @@ pub fn update_overlay_position(app_handle: &AppHandle) {
     }
 }
 
-/// Hides the recording overlay window with fade-out animation
+/// Hides the recording overlay window with fade-out animation.
+///
+/// OpenWhisper: when `floating_widget_enabled` is true we DON'T hide
+/// the window — instead we switch it to its idle state so the user can
+/// click it to start the next dictation. This is the persistent
+/// "always-on" widget mode Wispr Flow ships and that we surface under
+/// Settings → Advanced → Floating Widget.
 pub fn hide_recording_overlay(app_handle: &AppHandle) {
-    // Always hide the overlay regardless of settings - if setting was changed while recording,
-    // we still want to hide it properly
+    let settings = settings::get_settings(app_handle);
+    if settings.floating_widget_enabled
+        && settings.overlay_position != OverlayPosition::None
+    {
+        if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
+            // Stay visible but switch to the clickable idle state.
+            // Re-emit the config in case opacity changed since last show.
+            emit_overlay_config(app_handle);
+            let _ = overlay_window.emit("show-overlay", "idle");
+        }
+        return;
+    }
+
     if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
         // Emit event to trigger fade-out animation
         let _ = overlay_window.emit("hide-overlay", ());
@@ -382,6 +424,26 @@ pub fn hide_recording_overlay(app_handle: &AppHandle) {
             std::thread::sleep(std::time::Duration::from_millis(300));
             let _ = window_clone.hide();
         });
+    }
+}
+
+/// Show the floating widget in its idle, clickable state. Called from
+/// `initialize_core_logic` at app startup when the user has enabled
+/// the persistent widget. Idempotent.
+pub fn show_idle_widget(app_handle: &AppHandle) {
+    let settings = settings::get_settings(app_handle);
+    if !settings.floating_widget_enabled
+        || settings.overlay_position == OverlayPosition::None
+    {
+        return;
+    }
+    update_overlay_position(app_handle);
+    if let Some(overlay_window) = app_handle.get_webview_window("recording_overlay") {
+        let _ = overlay_window.show();
+        #[cfg(target_os = "windows")]
+        force_overlay_topmost(&overlay_window);
+        emit_overlay_config(app_handle);
+        let _ = overlay_window.emit("show-overlay", "idle");
     }
 }
 

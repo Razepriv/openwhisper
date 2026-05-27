@@ -87,13 +87,17 @@ c8f4be3  feat(auto_provisioner): wire Probe + Resolver + ModelManager for zero-t
 These are deliberate Phase-X.b items that wait for the React surface to land. The
 backend commands are ready; the visible UI sections are not.
 
-- ❌ Snippets sidebar section (UI for the existing CRUD commands).
-- ❌ Dictionary sidebar section (UI for the existing CRUD commands).
-- ❌ Transforms sidebar section + per-transform hotkey binding UI.
-- ❌ Voice Profile dashboard page (chart rendering for daily/hourly/streak data).
-- ❌ Scratchpad floating window + markdown editor.
-- ❌ 4-tier Auto Cleanup picker in Advanced settings.
-- ❌ Sidebar rework to Wispr layout (Home / Insights / Dictionary / Snippets / Style / Transforms / Notes).
+- ✅ Snippets sidebar section (UI for the existing CRUD commands). — commit `dfcb70a`.
+- ✅ Dictionary sidebar section (UI for the existing CRUD commands). — commit `dfcb70a`.
+- ✅ Transforms sidebar section + per-transform hotkey binding UI. — commit `dfcb70a`.
+- ✅ Voice Profile dashboard page. — commit `dfcb70a`.
+- ✅ Scratchpad / Notes section. — commit `dfcb70a`.
+- ✅ 4-tier Auto Cleanup picker in Advanced settings. — Phase UI.batch (`CleanupLevelPicker` mounted in `AdvancedSettings`).
+- ✅ Sidebar rework to Wispr layout (Home / Insights / Dictionary / Snippets / Style / Transforms / Notes). — commit `dfcb70a`.
+- ✅ **Persistent floating widget** (Wispr Flow's Flow Bar) — Phase UI.batch.
+  Stays on screen in an idle clickable state between dictations. Click triggers
+  the same flow as the push-to-talk hotkey via `trigger_dictation_from_widget`.
+  User-controllable enable/disable + opacity slider in Advanced → App.
 - ❌ Onboarding wizard polish: mic-test step, hotkey-config step, first-dictation tutorial.
 - ❌ Style presets per app category (Formal / Casual / Very Casual / Excited).
 
@@ -102,8 +106,12 @@ backend commands are ready; the visible UI sections are not.
 - ❌ Symbol extraction from the focused editor (feeds `known_symbols` into `vibe_coding::apply`).
   Needs the accessibility-tree reader on macOS / Windows / Linux. Backend code is ready
   to consume the list once it exists.
-- ❌ Per-app routing in `actions.rs`: read `active_app::detect()` at dictation start,
-  branch into `vibe_coding::apply` + the right style preset before pasting.
+- ✅ **Per-app routing in `actions.rs`**: `process_transcription_output` now calls
+  `active_app::detect()` once per dictation and runs the result through
+  `vibe_coding::apply` before paste. File-tagging fires for IDEs and agent terminals;
+  backtick-wrapping fires only in IDEs. Symbol list is currently empty (waiting on
+  the accessibility-tree probe above) — the variable-recognition pass is a no-op
+  until that lands.
 - ❌ Auto-trigger of `auto_provisioner::provision` from `initialize_core_logic` so first-run
   actually kicks off the flow without the UI needing to call it.
 - ❌ Command Mode hotkey wiring: capture selection via Cmd/Ctrl+C, dispatch through

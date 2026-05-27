@@ -443,6 +443,17 @@ pub struct AppSettings {
     pub selected_language: String,
     #[serde(default = "default_overlay_position")]
     pub overlay_position: OverlayPosition,
+    /// OpenWhisper persistent floating widget — when true, the overlay
+    /// window stays visible at all times (idle / recording /
+    /// transcribing) rather than appearing only mid-dictation. Clicking
+    /// the idle widget triggers the same flow as the push-to-talk
+    /// hotkey, so it doubles as a no-keyboard activation surface.
+    #[serde(default = "default_floating_widget_enabled")]
+    pub floating_widget_enabled: bool,
+    /// Floating-widget opacity in [0.2, 1.0]. The lower bound stops a
+    /// user from accidentally hiding the widget to invisibility.
+    #[serde(default = "default_floating_widget_opacity")]
+    pub floating_widget_opacity: f32,
     #[serde(default = "default_debug_mode")]
     pub debug_mode: bool,
     #[serde(default = "default_log_level")]
@@ -566,6 +577,20 @@ fn default_overlay_position() -> OverlayPosition {
     return OverlayPosition::None;
     #[cfg(not(target_os = "linux"))]
     return OverlayPosition::Bottom;
+}
+
+/// Persistent floating widget defaults — on for Windows/macOS (where
+/// the overlay machinery is solid), off for Linux until the GTK
+/// layer-shell story is more reliable.
+fn default_floating_widget_enabled() -> bool {
+    #[cfg(target_os = "linux")]
+    return false;
+    #[cfg(not(target_os = "linux"))]
+    return true;
+}
+
+fn default_floating_widget_opacity() -> f32 {
+    0.9
 }
 
 fn default_debug_mode() -> bool {
@@ -985,6 +1010,8 @@ pub fn get_default_settings() -> AppSettings {
         translate_to_english: false,
         selected_language: "auto".to_string(),
         overlay_position: default_overlay_position(),
+        floating_widget_enabled: default_floating_widget_enabled(),
+        floating_widget_opacity: default_floating_widget_opacity(),
         debug_mode: false,
         log_level: default_log_level(),
         custom_words: Vec::new(),

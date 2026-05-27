@@ -93,3 +93,42 @@
 .cancel-button:active {
   transform: scale(0.95);
 }
+
+/*
+ * OpenWhisper Phase UI.batch: persistent floating widget (Flow Bar
+ * equivalent). When the overlay is in the "idle" state it acts as a
+ * click target — these styles add the affordance (pointer cursor,
+ * subtle hover/active lift) so users discover the click action.
+ *
+ * The opacity of the bar in idle mode comes from `--widget-opacity`,
+ * a CSS custom property set on `.recording-overlay` from React via the
+ * `floating_widget_opacity` user setting (clamped backend-side to
+ * [0.2, 1.0]). When the variable is unset we fall back to 0.9 to keep
+ * the bar visible without dominating the screen.
+ */
+.recording-overlay.idle-clickable {
+  cursor: pointer;
+  /* The .fade-in rule overrides opacity to 1; .idle-clickable layers
+   * the user-controlled opacity on top so the widget can be made
+   * slightly translucent while idle. */
+  opacity: var(--widget-opacity, 0.9);
+  transition:
+    opacity 200ms ease-out,
+    transform 100ms ease-out,
+    background-color 150ms ease-out;
+}
+
+.recording-overlay.idle-clickable:hover {
+  opacity: 1;
+  background: #000000e6;
+  transform: scale(1.03);
+}
+
+.recording-overlay.idle-clickable:active {
+  transform: scale(0.97);
+}
+
+.recording-overlay.idle-clickable:focus-visible {
+  outline: 2px solid #faa2caaa;
+  outline-offset: 2px;
+}

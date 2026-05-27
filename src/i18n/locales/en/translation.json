@@ -443,6 +443,14 @@
           "top": "Top"
         }
       },
+      "floatingWidget": {
+        "title": "Floating Widget",
+        "description": "Keep the recording overlay always visible. Click it to start dictation without using the hotkey.",
+        "opacity": {
+          "title": "Widget Opacity",
+          "description": "How transparent the widget appears when idle. Lower values fade into the background; full opacity matches the active recording state."
+        }
+      },
       "pasteMethod": {
         "title": "Paste Method",
         "description": "Choose how text is inserted. Direct: simulates typing via system input. None: skips paste, only updates history/clipboard.",
