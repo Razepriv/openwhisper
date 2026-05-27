@@ -1,4 +1,4 @@
-use crate::actions::ACTION_MAP;
+use crate::actions::lookup_action;
 use crate::managers::audio::AudioRecordingManager;
 use log::{debug, error, warn};
 use std::sync::mpsc::{self, Sender};
@@ -38,7 +38,15 @@ pub struct TranscriptionCoordinator {
 }
 
 pub fn is_transcribe_binding(id: &str) -> bool {
-    id == "transcribe" || id == "transcribe_with_post_process"
+    // Phase Finalize.A — Transforms (`transform:<id>`) and Command
+    // Mode (`command_mode`) reuse the press-to-record / release-to-
+    // process pipeline. Routing them through the coordinator gives
+    // them the same debounce, push-to-talk, and cancel handling as the
+    // standard transcribe bindings.
+    id == "transcribe"
+        || id == "transcribe_with_post_process"
+        || id == crate::actions::COMMAND_MODE_BINDING_ID
+        || id.starts_with(crate::actions::TRANSFORM_BINDING_PREFIX)
 }
 
 impl TranscriptionCoordinator {
@@ -159,8 +167,8 @@ impl TranscriptionCoordinator {
 }
 
 fn start(app: &AppHandle, stage: &mut Stage, binding_id: &str, hotkey_string: &str) {
-    let Some(action) = ACTION_MAP.get(binding_id) else {
-        warn!("No action in ACTION_MAP for '{binding_id}'");
+    let Some(action) = lookup_action(binding_id) else {
+        warn!("No action found for '{binding_id}'");
         return;
     };
     action.start(app, binding_id, hotkey_string);
@@ -175,8 +183,8 @@ fn start(app: &AppHandle, stage: &mut Stage, binding_id: &str, hotkey_string: &s
 }
 
 fn stop(app: &AppHandle, stage: &mut Stage, binding_id: &str, hotkey_string: &str) {
-    let Some(action) = ACTION_MAP.get(binding_id) else {
-        warn!("No action in ACTION_MAP for '{binding_id}'");
+    let Some(action) = lookup_action(binding_id) else {
+        warn!("No action found for '{binding_id}'");
         return;
     };
     action.stop(app, binding_id, hotkey_string);

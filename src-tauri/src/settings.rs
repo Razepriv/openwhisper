@@ -501,6 +501,14 @@ pub struct AppSettings {
     /// "Polish" + "Prompt Engineer" pair shipped with every install.
     #[serde(default = "default_transforms")]
     pub transforms: Vec<crate::transforms::TransformBinding>,
+    /// OpenWhisper Phase Finalize.D — per-app-category style preset
+    /// overrides. Empty by default (each category falls back to its
+    /// hard-coded default — see `style_presets::AppCategory::default_preset`).
+    /// User-edited overrides survive here so the next dictation picks
+    /// up the preferred tone automatically.
+    #[serde(default)]
+    pub style_overrides:
+        HashMap<crate::style_presets::AppCategory, crate::style_presets::StylePreset>,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -993,6 +1001,37 @@ pub fn get_default_settings() -> AppSettings {
         },
     );
 
+    // OpenWhisper Phase Finalize.A — Command Mode hotkey (Wispr's
+    // highlight-then-speak-an-instruction flow). On press: capture
+    // selection via Ctrl/Cmd+C, start recording the spoken instruction.
+    // On release: stop recording, send selection + transcribed
+    // instruction to the LLM, paste the rewrite back in place.
+    //
+    // Default key choice avoids collisions with the standard
+    // transcribe / transcribe_with_post_process pair above. Users can
+    // remap or clear in Settings → Shortcuts.
+    #[cfg(target_os = "windows")]
+    let default_command_mode_shortcut = "ctrl+alt+space";
+    #[cfg(target_os = "macos")]
+    let default_command_mode_shortcut = "cmd+ctrl+space";
+    #[cfg(target_os = "linux")]
+    let default_command_mode_shortcut = "ctrl+alt+space";
+    #[cfg(not(any(target_os = "windows", target_os = "macos", target_os = "linux")))]
+    let default_command_mode_shortcut = "alt+ctrl+space";
+
+    bindings.insert(
+        "command_mode".to_string(),
+        ShortcutBinding {
+            id: "command_mode".to_string(),
+            name: "Command Mode".to_string(),
+            description: "Highlight text in any app, hold this shortcut, and speak an instruction. \
+                          OpenWhisper rewrites the selection in place using your local LLM."
+                .to_string(),
+            default_binding: default_command_mode_shortcut.to_string(),
+            current_binding: default_command_mode_shortcut.to_string(),
+        },
+    );
+
     AppSettings {
         bindings,
         push_to_talk: true,
@@ -1028,6 +1067,7 @@ pub fn get_default_settings() -> AppSettings {
         dictionary_entries: Vec::new(),
         snippets: Vec::new(),
         transforms: default_transforms(),
+        style_overrides: HashMap::new(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),

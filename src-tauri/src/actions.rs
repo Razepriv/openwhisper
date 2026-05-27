@@ -13,13 +13,50 @@ use crate::utils::{
 };
 use crate::TranscriptionCoordinator;
 use ferrous_opencc::{config::BuiltinConfig, OpenCC};
-use log::{debug, error, warn};
+use log::{debug, error, info, warn};
 use once_cell::sync::Lazy;
 use std::collections::HashMap;
-use std::sync::Arc;
+use std::sync::{Arc, Mutex};
 use std::time::Instant;
 use tauri::Manager;
 use tauri::{AppHandle, Emitter};
+
+/// What the next finished dictation should be processed as.
+///
+/// Phase Finalize.A — both Transforms and Command Mode reuse the
+/// standard recording / transcription pipeline; they only diverge at
+/// the post-transcription step. Rather than thread a strategy enum
+/// through every layer (the recording state machine doesn't care), we
+/// stash the strategy in this process-wide cell at start() time and
+/// read it back when the dictation finishes.
+///
+/// The cell is reset to `Standard` after every read so a stray hotkey
+/// press can never accidentally route a normal dictation through a
+/// Transform's prompt. The mutex is uncontended in practice (set once
+/// on press, read once on release) but exists so multiple shortcut
+/// threads can't race on it.
+#[derive(Debug, Clone)]
+pub(crate) enum NextProcessing {
+    Standard,
+    Transform { transform_id: String },
+    CommandMode { selection: String },
+}
+
+static NEXT_PROCESSING: Lazy<Mutex<NextProcessing>> =
+    Lazy::new(|| Mutex::new(NextProcessing::Standard));
+
+pub(crate) fn set_next_processing(next: NextProcessing) {
+    if let Ok(mut guard) = NEXT_PROCESSING.lock() {
+        *guard = next;
+    }
+}
+
+pub(crate) fn take_next_processing() -> NextProcessing {
+    NEXT_PROCESSING
+        .lock()
+        .map(|mut g| std::mem::replace(&mut *g, NextProcessing::Standard))
+        .unwrap_or(NextProcessing::Standard)
+}
 
 #[derive(Clone, serde::Serialize)]
 struct RecordingErrorEvent {
@@ -63,7 +100,28 @@ fn build_system_prompt(prompt_template: &str) -> String {
     prompt_template.replace("${output}", "").trim().to_string()
 }
 
-async fn post_process_transcription(settings: &AppSettings, transcription: &str) -> Option<String> {
+/// Compose the final system prompt sent to the LLM by prepending the
+/// active style-preset fragment (when present) to the user's prompt
+/// template. The style fragment goes FIRST because LLMs anchor on the
+/// opening of the system prompt; putting the tone instruction up
+/// front gives it more weight without burying the user's prompt.
+///
+/// Returns the base prompt unchanged when no style fragment is
+/// supplied — preserving exact behaviour for users who haven't
+/// triggered the Phase Finalize.D code path yet.
+fn compose_system_prompt(prompt_template: &str, style_fragment: Option<&str>) -> String {
+    let base = build_system_prompt(prompt_template);
+    match style_fragment {
+        Some(frag) if !frag.trim().is_empty() => format!("{}\n\n{}", frag.trim(), base),
+        _ => base,
+    }
+}
+
+async fn post_process_transcription(
+    settings: &AppSettings,
+    transcription: &str,
+    style_fragment: Option<&str>,
+) -> Option<String> {
     let provider = match settings.active_post_process_provider().cloned() {
         Some(provider) => provider,
         None => {
@@ -144,7 +202,10 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
     if provider.supports_structured_output {
         debug!("Using structured outputs for provider '{}'", provider.id);
 
-        let system_prompt = build_system_prompt(&prompt);
+        // Phase Finalize.D — splice the active app's style preset into
+        // the system prompt so the LLM matches tone to context (formal
+        // for email, casual for chat, concise for code, etc.).
+        let system_prompt = compose_system_prompt(&prompt, style_fragment);
         let user_content = transcription.to_string();
 
         // Handle Apple Intelligence separately since it uses native Swift APIs
@@ -258,8 +319,16 @@ async fn post_process_transcription(settings: &AppSettings, transcription: &str)
         }
     }
 
-    // Legacy mode: Replace ${output} variable in the prompt with the actual text
+    // Legacy mode: Replace ${output} variable in the prompt with the actual text.
+    // Phase Finalize.D — also prepend the style fragment so legacy
+    // providers benefit from per-app tone calibration too.
     let processed_prompt = prompt.replace("${output}", transcription);
+    let processed_prompt = match style_fragment {
+        Some(frag) if !frag.trim().is_empty() => {
+            format!("{}\n\n{}", frag.trim(), processed_prompt)
+        }
+        _ => processed_prompt,
+    };
     debug!("Processed prompt length: {} chars", processed_prompt.len());
 
     match crate::llm_client::send_chat_completion(
@@ -346,11 +415,144 @@ pub(crate) struct ProcessedTranscription {
     pub post_process_prompt: Option<String>,
 }
 
+/// Drive the configured LLM with explicit prompts. Shared between
+/// Auto Cleanup (configured prompt), Transforms (transform's own
+/// prompt), and Command Mode (selection + instruction prompt).
+///
+/// Returns `None` if the provider is misconfigured (no model, no
+/// selected provider) or the LLM call errors. Callers fall back to the
+/// raw text so a broken LLM never silently swallows a dictation.
+///
+/// Local-only enforcement (Phase 1.10) still applies — the URL
+/// whitelist in `llm_client::validate_local_url` runs before any
+/// request leaves the process.
+async fn run_llm_with_prompts(
+    settings: &AppSettings,
+    system_prompt: String,
+    user_content: String,
+) -> Option<String> {
+    let provider = settings.active_post_process_provider().cloned()?;
+    let model = settings.post_process_models.get(&provider.id).cloned()?;
+    if model.trim().is_empty() {
+        debug!(
+            "Skipping LLM call: provider '{}' has no model configured",
+            provider.id
+        );
+        return None;
+    }
+
+    let api_key = settings
+        .post_process_api_keys
+        .get(&provider.id)
+        .cloned()
+        .unwrap_or_default();
+
+    // Match `post_process_transcription`'s reasoning policy — disable
+    // reasoning where it's costly and adds no quality for short
+    // rewrite tasks.
+    let (reasoning_effort, reasoning) = match provider.id.as_str() {
+        "custom" => (Some("none".to_string()), None),
+        "openrouter" => (
+            None,
+            Some(crate::llm_client::ReasoningConfig {
+                effort: Some("none".to_string()),
+                exclude: Some(true),
+            }),
+        ),
+        _ => (None, None),
+    };
+
+    // Apple Intelligence path (macOS aarch64) — uses the native
+    // FoundationModels framework instead of an HTTP call.
+    if provider.id == APPLE_INTELLIGENCE_PROVIDER_ID {
+        #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
+        {
+            if !apple_intelligence::check_apple_intelligence_availability() {
+                debug!("Apple Intelligence not available; skipping LLM call");
+                return None;
+            }
+            let token_limit = model.trim().parse::<i32>().unwrap_or(0);
+            return match apple_intelligence::process_text_with_system_prompt(
+                &system_prompt,
+                &user_content,
+                token_limit,
+            ) {
+                Ok(result) if !result.trim().is_empty() => {
+                    Some(strip_invisible_chars(&result))
+                }
+                _ => None,
+            };
+        }
+        #[cfg(not(all(target_os = "macos", target_arch = "aarch64")))]
+        {
+            debug!("Apple Intelligence selected on unsupported platform");
+            return None;
+        }
+    }
+
+    match crate::llm_client::send_chat_completion_with_schema(
+        &provider,
+        api_key.clone(),
+        &model,
+        user_content.clone(),
+        Some(system_prompt.clone()),
+        // No structured schema for transforms / command mode — they
+        // want free-form rewrites, not a JSON envelope.
+        None,
+        reasoning_effort.clone(),
+        reasoning.clone(),
+    )
+    .await
+    {
+        Ok(Some(content)) if !content.trim().is_empty() => Some(strip_invisible_chars(&content)),
+        Ok(_) => {
+            warn!("LLM returned empty content for '{}'", provider.id);
+            None
+        }
+        Err(e) => {
+            // Fall back to the legacy /chat/completions path: some
+            // local servers (older llama.cpp builds) don't accept the
+            // schema-aware endpoint.
+            warn!(
+                "Structured chat completion failed ({}); retrying legacy endpoint",
+                e
+            );
+            let legacy_prompt =
+                format!("{}\n\n{}", system_prompt.trim(), user_content.trim());
+            match crate::llm_client::send_chat_completion(
+                &provider,
+                api_key,
+                &model,
+                legacy_prompt,
+                reasoning_effort,
+                reasoning,
+            )
+            .await
+            {
+                Ok(Some(content)) if !content.trim().is_empty() => {
+                    Some(strip_invisible_chars(&content))
+                }
+                Ok(_) => None,
+                Err(err) => {
+                    error!("Legacy LLM call also failed: {}", err);
+                    None
+                }
+            }
+        }
+    }
+}
+
 pub(crate) async fn process_transcription_output(
     app: &AppHandle,
     transcription: &str,
     post_process: bool,
 ) -> ProcessedTranscription {
+    // Phase Finalize.A — Transforms and Command Mode set this cell
+    // during their start() handler so we know to take a different
+    // post-processing path. Default is `Standard` (the regular
+    // auto-cleanup pipeline below).
+    let next = take_next_processing();
+
     let settings = get_settings(app);
     let mut final_text = transcription.to_string();
     let mut post_processed_text: Option<String> = None;
@@ -363,7 +565,13 @@ pub(crate) async fn process_transcription_output(
     // Phase 3.2: snippet expansion happens BEFORE the LLM cleanup pass
     // so that the LLM sees the expanded text and can polish grammar
     // around the substitution. No-op when the snippets list is empty.
-    if !settings.snippets.is_empty() {
+    // Snippets run for Standard + Transform paths but NOT Command
+    // Mode (the dictated instruction is meta-text, not user content).
+    let run_snippets = matches!(
+        next,
+        NextProcessing::Standard | NextProcessing::Transform { .. }
+    );
+    if run_snippets && !settings.snippets.is_empty() {
         final_text = crate::managers::snippets::expand(&final_text, &settings.snippets);
     }
 
@@ -377,26 +585,148 @@ pub(crate) async fn process_transcription_output(
     // both contexts, backtick wrapping of identifiers in IDEs only. On
     // every other app (browsers, mail, docs…) `apply` is a no-op.
     //
-    // `known_symbols` is empty here — symbol extraction from the
-    // focused editor's accessibility tree is a follow-up wired through
-    // the same call path once that probe lands. The function tolerates
-    // an empty list and simply skips the variable-recognition pass.
-    let active_app = crate::active_app::detect();
-    if !active_app.is_empty() {
-        let rewritten = crate::vibe_coding::apply(&final_text, &active_app, &[]);
-        if rewritten != final_text {
-            debug!(
-                "Vibe Coding rewrote transcription for app '{}' ({} → {} chars)",
-                active_app.process_name,
-                final_text.len(),
-                rewritten.len()
-            );
-            final_text = rewritten;
+    // Phase Finalize.C — `known_symbols` is filled by the
+    // accessibility-tree probe when supported (Windows UI Automation
+    // today; macOS / Linux still empty). The function tolerates an
+    // empty list and simply skips the variable-recognition pass.
+    //
+    // Vibe Coding does NOT run for Transforms or Command Mode — the
+    // user explicitly opted into a rewrite there, and applying
+    // identifier markup on top would be surprising.
+    if matches!(next, NextProcessing::Standard) {
+        let active_app = crate::active_app::detect();
+        if !active_app.is_empty() {
+            let symbols = crate::symbols::extract_visible_symbols(&active_app);
+            let rewritten = crate::vibe_coding::apply(&final_text, &active_app, &symbols);
+            if rewritten != final_text {
+                debug!(
+                    "Vibe Coding rewrote transcription for app '{}' ({} → {} chars, {} symbols)",
+                    active_app.process_name,
+                    final_text.len(),
+                    rewritten.len(),
+                    symbols.len()
+                );
+                final_text = rewritten;
+            }
         }
     }
 
+    // Phase Finalize.A — Transform and Command Mode short-circuit the
+    // standard cleanup pipeline below. They run their own LLM call
+    // with an explicit prompt and return.
+    match next {
+        NextProcessing::Transform { transform_id } => {
+            if let Some(transform) =
+                crate::transforms::find_by_id(&settings.transforms, &transform_id)
+            {
+                info!(
+                    "Applying transform '{}' to {} char dictation",
+                    transform.name,
+                    final_text.len()
+                );
+                let user_content = crate::transforms::apply_template(transform, &final_text);
+                // System prompt is intentionally minimal — the
+                // transform's body already encodes the instruction.
+                let system =
+                    "You apply the user's prompt to the text they wrote. \
+                     Output ONLY the rewritten text — no commentary, no quotes.".to_string();
+                if let Some(rewritten) =
+                    run_llm_with_prompts(&settings, system, user_content).await
+                {
+                    post_processed_text = Some(rewritten.clone());
+                    post_process_prompt = Some(transform.prompt.clone());
+                    final_text = rewritten;
+                } else {
+                    warn!(
+                        "Transform '{}' LLM call returned nothing; pasting raw dictation",
+                        transform.name
+                    );
+                }
+            } else {
+                warn!(
+                    "Transform '{}' not found (deleted?); pasting raw dictation",
+                    transform_id
+                );
+            }
+            return ProcessedTranscription {
+                final_text,
+                post_processed_text,
+                post_process_prompt,
+            };
+        }
+        NextProcessing::CommandMode { selection } => {
+            match crate::command_mode::prepare(selection.clone(), final_text.clone()) {
+                Ok(request) => {
+                    let (system, user) = crate::command_mode::build_prompts(&request);
+                    if let Some(rewritten) =
+                        run_llm_with_prompts(&settings, system, user).await
+                    {
+                        if crate::command_mode::is_no_op(&request.selection, &rewritten) {
+                            info!("Command Mode: rewrite identical to selection; no-op");
+                            // Final text matches selection so paste is
+                            // effectively idempotent.
+                            final_text = request.selection.clone();
+                        } else {
+                            final_text = rewritten.clone();
+                        }
+                        post_processed_text = Some(final_text.clone());
+                        post_process_prompt = Some(format!(
+                            "[Command Mode] Apply instruction \"{}\" to selection",
+                            request.instruction
+                        ));
+                    } else {
+                        warn!(
+                            "Command Mode LLM call returned nothing; restoring selection unchanged"
+                        );
+                        final_text = request.selection.clone();
+                    }
+                }
+                Err(e) => {
+                    warn!("Command Mode validation rejected request: {}", e);
+                    // Surface the error to the user via the existing
+                    // recording-error event channel.
+                    let _ = app.emit(
+                        "command-mode-error",
+                        RecordingErrorEvent {
+                            error_type: "validation".to_string(),
+                            detail: Some(e.to_string()),
+                        },
+                    );
+                    // Restore selection so the user's clipboard / paste
+                    // doesn't accidentally end up as the dictated text.
+                    final_text = selection;
+                }
+            }
+            return ProcessedTranscription {
+                final_text,
+                post_processed_text,
+                post_process_prompt,
+            };
+        }
+        NextProcessing::Standard => {} // fall through to the existing pipeline
+    }
+
     if post_process {
-        if let Some(processed_text) = post_process_transcription(&settings, &final_text).await {
+        // Phase Finalize.D — compute the per-app style fragment for
+        // the cleanup LLM. Snapshotting the active app HERE (separate
+        // from the Vibe Coding snapshot above) keeps the style call
+        // and the routing call decoupled, but in practice both look at
+        // the same focused window.
+        let style_fragment = {
+            let app_snap = crate::active_app::detect();
+            let preset = crate::style_presets::effective_preset(
+                &app_snap,
+                &settings.style_overrides,
+            );
+            preset.system_fragment().to_string()
+        };
+        if let Some(processed_text) = post_process_transcription(
+            &settings,
+            &final_text,
+            Some(&style_fragment),
+        )
+        .await
+        {
             post_processed_text = Some(processed_text.clone());
             final_text = processed_text;
 
@@ -729,6 +1059,155 @@ impl ShortcutAction for TestAction {
             app.package_info().name
         );
     }
+}
+
+// ============================================================================
+// Phase Finalize.A — Transform + Command Mode actions
+// ============================================================================
+//
+// Both delegate to the standard recording pipeline via TranscribeAction
+// for everything except the post-transcription step. The strategy
+// switch happens in `process_transcription_output` via the
+// `NEXT_PROCESSING` cell set in the corresponding action's start().
+
+/// Prefix used in binding IDs to identify per-transform hotkeys.
+/// A binding with id `"transform:abc123"` runs the transform whose
+/// `id == "abc123"`. We use a colon because UUIDs / user-chosen IDs
+/// never contain colons.
+pub const TRANSFORM_BINDING_PREFIX: &str = "transform:";
+
+/// Binding id reserved for Command Mode.
+pub const COMMAND_MODE_BINDING_ID: &str = "command_mode";
+
+fn extract_transform_id(binding_id: &str) -> Option<&str> {
+    binding_id.strip_prefix(TRANSFORM_BINDING_PREFIX)
+}
+
+/// Hotkey-bound transform — exhibits the same press-to-record /
+/// release-to-process flow as the standard Transcribe binding, but the
+/// transcribed text is passed through the transform's prompt to the
+/// LLM before being pasted.
+struct TransformAction {
+    transform_id: String,
+}
+
+impl ShortcutAction for TransformAction {
+    fn start(&self, app: &AppHandle, binding_id: &str, shortcut_str: &str) {
+        set_next_processing(NextProcessing::Transform {
+            transform_id: self.transform_id.clone(),
+        });
+        // Reuse the standard transcribe path (which runs the recording
+        // pipeline). The strategy in NEXT_PROCESSING flips the
+        // post-transcription branch when stop() finishes the
+        // transcription.
+        TranscribeAction { post_process: true }.start(app, binding_id, shortcut_str);
+    }
+
+    fn stop(&self, app: &AppHandle, binding_id: &str, shortcut_str: &str) {
+        TranscribeAction { post_process: true }.stop(app, binding_id, shortcut_str);
+    }
+}
+
+/// Command Mode — Wispr Flow's headline feature. On press we capture
+/// the user's selection via Ctrl/Cmd+C and stash it; on release we
+/// transcribe the spoken instruction, build the (selection +
+/// instruction) prompt, run it through the LLM, and paste the rewrite
+/// over the original selection.
+struct CommandModeAction;
+
+impl ShortcutAction for CommandModeAction {
+    fn start(&self, app: &AppHandle, binding_id: &str, shortcut_str: &str) {
+        let selection = capture_selection_via_clipboard(app).unwrap_or_default();
+        if selection.trim().is_empty() {
+            warn!(
+                "Command Mode pressed but no selection captured (clipboard empty). \
+                 Continuing — the LLM step will short-circuit with NoSelection."
+            );
+        } else {
+            debug!(
+                "Command Mode captured {} chars of selection",
+                selection.len()
+            );
+        }
+        set_next_processing(NextProcessing::CommandMode { selection });
+        TranscribeAction { post_process: true }.start(app, binding_id, shortcut_str);
+    }
+
+    fn stop(&self, app: &AppHandle, binding_id: &str, shortcut_str: &str) {
+        TranscribeAction { post_process: true }.stop(app, binding_id, shortcut_str);
+    }
+}
+
+/// Capture the user's current selection by simulating Ctrl/Cmd+C and
+/// reading the clipboard. Restores the previous clipboard contents
+/// before returning so the user's clipboard isn't trashed.
+///
+/// Returns `None` only when the Enigo state isn't available (unusual —
+/// it's initialised at app startup); an empty selection returns
+/// `Some("")` so the caller can decide how to handle it.
+fn capture_selection_via_clipboard(app: &AppHandle) -> Option<String> {
+    use tauri_plugin_clipboard_manager::ClipboardExt;
+
+    let enigo_state = app.try_state::<crate::input::EnigoState>()?;
+    // Save whatever's currently on the clipboard so we can restore it.
+    let clipboard = app.clipboard();
+    let prior = clipboard.read_text().ok();
+
+    // Empty the clipboard so we can tell whether the Ctrl+C actually
+    // produced a copy — some apps swallow Ctrl+C on empty selections.
+    let _ = clipboard.write_text(String::new());
+
+    {
+        let mut enigo = enigo_state.0.lock().ok()?;
+        if let Err(e) = crate::input::send_copy_ctrl_c(&mut *enigo) {
+            warn!("Failed to send Ctrl+C for Command Mode capture: {}", e);
+            // Restore the prior clipboard and bail.
+            if let Some(prev) = prior {
+                let _ = clipboard.write_text(prev);
+            }
+            return Some(String::new());
+        }
+    }
+
+    // Give the focused app a beat to fulfil the copy. 80 ms matches
+    // the safe-default we use elsewhere (clipboard.rs paste path).
+    std::thread::sleep(std::time::Duration::from_millis(80));
+
+    let captured = clipboard.read_text().unwrap_or_default();
+    // Restore prior clipboard. We do this even when capture succeeded
+    // because the user's clipboard belongs to them, not us.
+    if let Some(prev) = prior {
+        let _ = clipboard.write_text(prev);
+    }
+
+    Some(captured)
+}
+
+/// Dynamic action dispatcher used by the shortcut handler + the
+/// transcription coordinator. Returns an `Arc<dyn ShortcutAction>`:
+///
+/// - for the static IDs in `ACTION_MAP` — returns the cached instance.
+/// - for `"command_mode"` — returns a fresh `CommandModeAction`.
+/// - for `"transform:<id>"` — returns a fresh `TransformAction` keyed
+///   to the trailing id (no validation against `settings.transforms`
+///   here; the post-processing step handles a missing transform
+///   gracefully).
+///
+/// Returning `None` only when the binding id is unknown — callers log
+/// and ignore.
+pub fn lookup_action(binding_id: &str) -> Option<Arc<dyn ShortcutAction>> {
+    if let Some(action) = ACTION_MAP.get(binding_id) {
+        return Some(Arc::clone(action));
+    }
+    if binding_id == COMMAND_MODE_BINDING_ID {
+        return Some(Arc::new(CommandModeAction) as Arc<dyn ShortcutAction>);
+    }
+    if let Some(transform_id) = extract_transform_id(binding_id) {
+        return Some(Arc::new(TransformAction {
+            transform_id: transform_id.to_string(),
+        }) as Arc<dyn ShortcutAction>);
+    }
+    None
 }
 
 // Static Action Map

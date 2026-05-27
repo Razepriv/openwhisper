@@ -54,6 +54,77 @@ pub fn init_shortcuts(app: &AppHandle) {
             }
         }
     }
+
+    // Phase Finalize.A — register one global shortcut per Transform
+    // that the user has bound to a hotkey. The standard binding loop
+    // above only walks `settings.bindings` (the fixed-id map); these
+    // come from `settings.transforms` and are keyed by `transform:<id>`.
+    register_transform_hotkeys(app);
+}
+
+/// Walk `settings.transforms` and register a global shortcut for every
+/// transform that has a `hotkey: Some(_)` set. Each registration is a
+/// best-effort; failures are logged but don't block the others.
+///
+/// Called from `init_shortcuts` on startup and from the per-transform
+/// CRUD commands whenever a hotkey is added / changed / removed so
+/// the live registration stays in sync with persisted settings.
+pub fn register_transform_hotkeys(app: &AppHandle) {
+    let settings = settings::get_settings(app);
+    for transform in &settings.transforms {
+        let Some(hotkey) = transform.hotkey.as_ref() else {
+            continue;
+        };
+        if hotkey.trim().is_empty() {
+            continue;
+        }
+        // The binding ID encodes the transform's id so the action
+        // dispatcher in `actions::lookup_action` can map back to the
+        // right transform without walking settings again.
+        let binding_id = format!("{}{}", crate::actions::TRANSFORM_BINDING_PREFIX, transform.id);
+        let binding = ShortcutBinding {
+            id: binding_id.clone(),
+            name: transform.name.clone(),
+            description: format!("Apply transform '{}' to the next dictation.", transform.name),
+            default_binding: hotkey.clone(),
+            current_binding: hotkey.clone(),
+        };
+        if let Err(e) = register_shortcut(app, binding) {
+            warn!(
+                "Failed to register transform hotkey '{}' for '{}': {}",
+                hotkey, transform.name, e
+            );
+        }
+    }
+}
+
+/// Unregister all transform-bound global shortcuts. Called when the
+/// user re-binds or deletes transforms so we don't leak orphaned
+/// registrations.
+pub fn unregister_transform_hotkeys(app: &AppHandle) {
+    let settings = settings::get_settings(app);
+    for transform in &settings.transforms {
+        let Some(hotkey) = transform.hotkey.as_ref() else {
+            continue;
+        };
+        if hotkey.trim().is_empty() {
+            continue;
+        }
+        let binding_id = format!("{}{}", crate::actions::TRANSFORM_BINDING_PREFIX, transform.id);
+        let binding = ShortcutBinding {
+            id: binding_id,
+            name: transform.name.clone(),
+            description: String::new(),
+            default_binding: hotkey.clone(),
+            current_binding: hotkey.clone(),
+        };
+        if let Err(e) = unregister_shortcut(app, binding) {
+            warn!(
+                "Failed to unregister transform hotkey '{}': {}",
+                hotkey, e
+            );
+        }
+    }
 }
 
 /// Register the cancel shortcut (called when recording starts)

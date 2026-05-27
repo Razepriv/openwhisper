@@ -22,6 +22,8 @@ mod overlay;
 pub mod portable;
 mod settings;
 mod shortcut;
+mod style_presets;
+mod symbols;
 mod system_probe;
 mod signal_handle;
 mod transcription_coordinator;
@@ -313,6 +315,101 @@ fn initialize_core_logic(app_handle: &AppHandle) {
         std::thread::sleep(std::time::Duration::from_millis(500));
         overlay::show_idle_widget(&app_handle_for_widget);
     });
+
+    // Phase Finalize.B — first-run auto-provisioner trigger.
+    //
+    // Run after a short delay so:
+    //  - The frontend has had a chance to mount the AutoSetupStep
+    //    listener and start displaying progress events.
+    //  - The model manager finished its initial disk scan and reports
+    //    accurate "installed" state.
+    //
+    // No-op when the user already has a model. Spawned on the Tokio
+    // runtime so the download isn't blocking the main thread.
+    let app_handle_for_provision = app_handle.clone();
+    tauri::async_runtime::spawn(async move {
+        // 1.5 s — long enough for the React app + auto-setup listener
+        // to come up before we start emitting events.
+        tokio::time::sleep(std::time::Duration::from_millis(1500)).await;
+        maybe_auto_provision(app_handle_for_provision).await;
+    });
+}
+
+/// Phase Finalize.B helper — kicks off `auto_provisioner::provision`
+/// when (a) no STT model is currently installed, and (b) we haven't
+/// already attempted auto-provision in this session. Idempotent.
+///
+/// Errors are logged but never propagated: the user can still trigger
+/// it manually from the onboarding screen if the auto-attempt fails.
+async fn maybe_auto_provision(app: AppHandle) {
+    use crate::managers::model::ModelManager;
+
+    let settings = settings::get_settings(&app);
+    // Already configured? Bail.
+    if !settings.selected_model.trim().is_empty() {
+        log::debug!(
+            "Auto-provision skipped: model '{}' already selected",
+            settings.selected_model
+        );
+        return;
+    }
+
+    // Any model on disk that we could use? Bail — the user can pick
+    // one in the onboarding UI rather than have us silently grab a
+    // potentially wrong tier.
+    let mm = match app.try_state::<Arc<ModelManager>>() {
+        Some(state) => state.inner().clone(),
+        None => {
+            log::warn!("Auto-provision skipped: ModelManager not yet registered");
+            return;
+        }
+    };
+    let already_installed = mm
+        .get_available_models()
+        .iter()
+        .any(|m| m.is_downloaded);
+    if already_installed {
+        log::debug!("Auto-provision skipped: a model is already installed");
+        return;
+    }
+
+    log::info!("Auto-provision: no model installed, kicking off zero-touch setup");
+
+    // We need a SystemProfile for the BackendResolver, even though we
+    // don't read individual fields here — the resolver consults it.
+    let _profile = match system_probe::probe() {
+        Ok(p) => p,
+        Err(e) => {
+            log::warn!("Auto-provision: system probe failed: {}", e);
+            return;
+        }
+    };
+    // GPU capability check — conservatively assume "no". An incorrect
+    // false-negative just means we recommend a CPU-friendly tier
+    // (Whisper Small) which works everywhere. Users with discrete
+    // GPUs can opt into Turbo / Large from the model picker after
+    // first-run finishes.
+    let has_capable_gpu = false;
+    // Detect Ollama in the background — we don't block on it, but
+    // give it a fair window. Default to "absent" on timeout.
+    let ollama_detected = tokio::time::timeout(
+        std::time::Duration::from_secs(2),
+        tokio::task::spawn_blocking(|| ollama_detect::detect().installed),
+    )
+    .await
+    .map(|r| r.unwrap_or(false))
+    .unwrap_or(false);
+
+    match auto_provisioner::provision(app.clone(), has_capable_gpu, ollama_detected).await {
+        Ok(completed) => log::info!(
+            "Auto-provision succeeded: active model = '{}'",
+            completed.active_model_id
+        ),
+        Err(e) => log::warn!(
+            "Auto-provision failed: {}. The user can retry from the onboarding UI.",
+            e
+        ),
+    }
 }
 
 #[tauri::command]
