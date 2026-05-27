@@ -67,7 +67,7 @@
     "updater": {
       "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IEIzNDIyMjMzNEM3NTAxMTAKUldRUUFYVk1NeUpDcytVZXpmdVBhQ0hIMGlBQlliSXFUZnIwU2Q2UFYxV2JxdHltcklLVEg1SW0K",
       "endpoints": [
-        "https://github.com/openwhisper/openwhisper/releases/latest/download/latest.json"
+        "https://github.com/Razepriv/openwhisper/releases/latest/download/latest.json"
       ]
     }
   }

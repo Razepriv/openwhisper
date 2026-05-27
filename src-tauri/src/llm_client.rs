@@ -67,11 +67,11 @@ fn build_headers(provider: &PostProcessProvider, api_key: &str) -> Result<Header
     headers.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
     headers.insert(
         REFERER,
-        HeaderValue::from_static("https://github.com/openwhisper/openwhisper"),
+        HeaderValue::from_static("https://github.com/Razepriv/openwhisper"),
     );
     headers.insert(
         USER_AGENT,
-        HeaderValue::from_static("OpenWhisper/0.1 (+https://github.com/openwhisper/openwhisper)"),
+        HeaderValue::from_static("OpenWhisper/0.1 (+https://github.com/Razepriv/openwhisper)"),
     );
     headers.insert("X-Title", HeaderValue::from_static("OpenWhisper"));
 

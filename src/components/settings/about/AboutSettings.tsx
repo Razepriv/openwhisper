@@ -29,7 +29,7 @@ export const AboutSettings: React.FC = () => {
 
   const handleDonateClick = async () => {
     try {
-      await openUrl("https://github.com/openwhisper/openwhisper");
+      await openUrl("https://github.com/Razepriv/openwhisper");
     } catch (error) {
       console.error("Failed to open project link:", error);
     }
@@ -67,7 +67,7 @@ export const AboutSettings: React.FC = () => {
             variant="secondary"
             size="md"
             onClick={() =>
-              openUrl("https://github.com/openwhisper/openwhisper")
+              openUrl("https://github.com/Razepriv/openwhisper")
             }
           >
             {t("settings.about.sourceCode.button")}

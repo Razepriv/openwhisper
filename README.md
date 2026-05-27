@@ -4,6 +4,22 @@
 
 Hold a hotkey anywhere on your computer, speak naturally, and clean formatted text is pasted at your cursor. Your voice never leaves your machine. Zero subscription. Zero telemetry. **Zero cloud, zero API.**
 
+## Download
+
+Grab the latest installer for your OS from the [**Releases page**](https://github.com/Razepriv/openwhisper/releases).
+
+| OS                  | Asset                                   | What you'll see on first launch                                |
+| ------------------- | --------------------------------------- | -------------------------------------------------------------- |
+| **Windows 10/11**   | `OpenWhisper_x.y.z_x64_en-US.msi` or `OpenWhisper_x.y.z_x64-setup.exe` | SmartScreen warning → "More info" → "Run anyway". (We don't ship a code-signing cert.) |
+| **macOS (Apple Silicon)** | `OpenWhisper_x.y.z_aarch64.dmg`   | Gatekeeper warning → System Settings → Privacy & Security → "Open Anyway". |
+| **macOS (Intel)**   | `OpenWhisper_x.y.z_x64.dmg`             | Same Gatekeeper flow.                                          |
+| **Linux (x86_64)**  | `OpenWhisper_x.y.z_amd64.deb` / `.AppImage` / `.rpm` | Install via `dpkg -i` (Debian/Ubuntu) or just `chmod +x` and run the AppImage. |
+| **Linux (arm64)**   | `OpenWhisper_x.y.z_arm64.deb` / `.AppImage` / `.rpm` | Same.                                                    |
+
+OpenWhisper ships **unsigned by design** — we don't pay $99/yr to Apple or $300+/yr to a Windows EV cert authority just so you can run a local-only tool. The one-time "this app is unsigned" warning is a normal part of installing open-source software outside the App Store / Microsoft Store. After the first launch the OS remembers your choice.
+
+**Where to look for updates:** OpenWhisper has a built-in auto-updater that pulls from the same Releases page. Toggle it in Settings → About → "Check for updates".
+
 ## Privacy guarantee
 
 OpenWhisper performs **all** transcription and AI cleanup on your own machine:
@@ -65,11 +81,26 @@ See [BUILD.md](./BUILD.md). Short version on Windows:
 
 ```bash
 # Prerequisites: Rust (rustup), Bun, Visual Studio 2022 C++ Build Tools
-git clone https://github.com/openwhisper/openwhisper.git
+git clone https://github.com/Razepriv/openwhisper.git
 cd openwhisper
 bun install
 bun run tauri dev
 ```
+
+### Cutting a release (for maintainers)
+
+The release pipeline is fully unsigned by default, so producing a downloadable installer set requires nothing more than triggering the workflow:
+
+1. Bump `version` in `src-tauri/tauri.conf.json`.
+2. Commit + push.
+3. GitHub → Actions → **Release** → **Run workflow**.
+4. Leave the "Code-sign binaries" checkbox unchecked (it requires the Apple + Azure cert secrets to be populated).
+5. Wait ~25 minutes for the matrix (Mac arm64/x64, Linux x64/arm64 deb/rpm/AppImage, Windows x64/arm64 msi/exe) to build. Each platform job downloads:
+   - **Whisper Tiny** (~75 MB) from Hugging Face → bundled into the installer for instant first-use.
+   - **`llama-server`** from the upstream `llama.cpp` release (Vulkan build on Win/Linux, Metal on Mac) → bundled for local LLM cleanup.
+6. The workflow publishes everything as a draft GitHub Release. Edit the release notes and click "Publish release" when ready.
+
+To also bundle **Whisper Small** (adds ~470 MB to the installer for users on slower networks who want a quality upgrade out of the box), set the repository variable `WHISPER_SMALL_BUNDLE=true` before running the workflow.
 
 ## License
 

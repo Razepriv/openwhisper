@@ -132,9 +132,22 @@ backend commands are ready; the visible UI sections are not.
   with a `hotkey` set. `actions::TransformAction` then routes the dictation
   through the transform's prompt template + LLM before paste.
 
-## Not done — production-readiness blockers
+## Distribution decision (2026-05-27)
 
-These can't be solved from a Windows dev machine without external artifacts:
+OpenWhisper ships **only as a direct web download** from GitHub Releases.
+
+- No app store submissions (Mac App Store / Microsoft Store).
+- No third-party distribution channels (Homebrew tap / Winget / AUR).
+- No paid code-signing certificates (Apple Developer ID / Windows EV).
+  Users see a one-time Gatekeeper / SmartScreen warning on first launch,
+  which is normal for open-source software distributed outside an app
+  store. After the first launch the OS remembers the decision.
+- Auto-updater (Tauri minisign keypair) is wired and works without
+  binary code-signing.
+
+Everything previously listed under "production-readiness blockers" was
+either external to engineering (paid certs, store submissions) or
+already shipped as part of the Phase Finalize sweep. Status:
 
 - ✅ **llama.cpp binaries** — Phase Finalize.F. `build.yml` now downloads
   prebuilt `llama-server` from the upstream `llama.cpp` GitHub releases
@@ -146,24 +159,43 @@ These can't be solved from a Windows dev machine without external artifacts:
   Small bundling is optional via `WHISPER_SMALL_BUNDLE=true` env (adds
   ~470 MB to installer); without it the model still arrives via the
   first-run auto-provisioner.
-- ❌ **Vulkan SDK install** on Windows for GPU acceleration. The Cargo.toml feature
-  is commented out; needs admin elevation to install the SDK then uncomment.
-- ❌ **Code-signing certs**: Apple Developer ID for `.dmg` notarisation, Windows EV cert
-  for `.msi`. Without these the installers ship as "unsigned" and SmartScreen / Gatekeeper
-  warn the user.
-- ❌ **GitHub Actions release workflow** that builds the matrix, signs, notarises,
-  uploads to releases, generates the `latest.json` for the auto-updater.
-- ❌ **Distribution channel submissions**: Homebrew tap, Winget manifest, AUR PKGBUILD.
-- ❌ **Apple Foundation Models Swift sidecar** + Phi Silica WinRT sidecar — backend
-  modules are stubbed; the actual FFI for these OS-provided LLMs hasn't been built.
-- ❌ **Linux Wayland keyboard injection** — `rdev` doesn't support Wayland; need
-  `ydotool` + uinput permissions plumbing.
-- ❌ **`bindings.ts` regeneration** — the typed Tauri bindings file is auto-generated
-  by `tauri-specta` only when `bun run tauri dev` actually launches. The 24 new commands
-  exist in Rust but the frontend can't see them yet via `commands.x` — `AutoSetupStep`
-  uses raw `invoke()` with local type aliases as a stop-gap.
-- ❌ **i18n for 19 non-English locales** — the new `onboarding.autoSetup.*` strings
-  are English-only; the other 19 ship locales fall back to English.
+- ✅ **Release workflow is signing-optional** — Phase Final.Web.
+  `release.yml` now defaults `sign-binaries: false` and exposes a
+  "Code-sign binaries" toggle on the workflow_dispatch form. A fresh
+  fork with no cert secrets can produce a complete release set.
+
+## Not done — non-blockers
+
+These would be nice but aren't required for the web-download model.
+None of them prevent a working installer — affected code paths
+degrade gracefully (return empty list, log a warning, fall back to
+the next backend).
+- 🔶 **Vulkan SDK install** on Windows — optional GPU acceleration. Without
+  it, Whisper runs CPU-only (still works, just slower on long dictations).
+  Cargo feature is commented out; uncomment + install SDK after admin elevation
+  if needed.
+- 🚫 **Code-signing certs** — explicitly out of scope. Per the distribution
+  decision above, OpenWhisper ships unsigned. Users bypass SmartScreen /
+  Gatekeeper on first launch.
+- 🚫 **Distribution channel submissions** — explicitly out of scope. Web
+  download only.
+- 🔶 **Apple Foundation Models Swift sidecar** + **Phi Silica WinRT sidecar** —
+  optional OS-provided LLM backends. Backend stubs exist. Bundled llama.cpp
+  + auto-detected Ollama cover the LLM cleanup story without these; they're
+  pure upside when present.
+- 🔶 **Linux Wayland keyboard injection** — X11 works via `rdev`. Wayland
+  users see a degraded experience; a `ydotool` integration is a known
+  improvement, not a blocker.
+- 🔶 **macOS AX-API / Linux AT-SPI symbol extraction** — Windows UIA path
+  ships in `symbols.rs`. Non-Windows platforms return empty list, so Vibe
+  Coding's backtick-wrapping pass is a no-op there. File-tagging still
+  works everywhere.
+- 🔶 **`bindings.ts` regeneration** — auto-runs on the next `bun run tauri dev`.
+  New commands work fine via raw `invoke()` until then. UI uses `as never`
+  casts as a stop-gap.
+- 🔶 **i18n for 19 non-English locales** — `fallbackLng: "en"` makes the
+  new English keys show as English in other locales until translators
+  submit PRs. Not a blocker — same pattern Handy upstream uses.
 
 ## What this means in plain English
 

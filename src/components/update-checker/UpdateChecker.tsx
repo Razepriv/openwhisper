@@ -204,7 +204,7 @@ const UpdateChecker: React.FC<UpdateCheckerProps> = ({ className = "" }) => {
                 className="px-3 py-1.5 text-sm rounded bg-logo-primary text-white hover:bg-logo-primary/80 transition-colors"
                 onClick={() => {
                   openUrl(
-                    "https://github.com/openwhisper/openwhisper/releases/latest",
+                    "https://github.com/Razepriv/openwhisper/releases/latest",
                   );
                   setShowPortableUpdateDialog(false);
                 }}

@@ -1,6 +1,24 @@
 name: "Release"
 
-on: workflow_dispatch
+# OpenWhisper ships as a direct web download from GitHub Releases —
+# no app store, no Homebrew/Winget/AUR. The release is triggered
+# manually from the Actions tab. By default the build runs UNSIGNED
+# (no Apple Developer ID, no Windows EV cert required); users will
+# see a SmartScreen / Gatekeeper warning the first time they run it,
+# which they can bypass via "Open Anyway".
+#
+# Set `sign` to `true` from the manual-dispatch form ONLY when the
+# Apple + Azure secrets are actually populated in this repo's
+# secrets. With `sign: false` (default) every signing step is
+# skipped, so the workflow works on a fresh fork with no secrets.
+on:
+  workflow_dispatch:
+    inputs:
+      sign:
+        description: "Code-sign binaries (requires Apple + Azure secrets to be configured)"
+        type: boolean
+        default: false
+        required: false
 
 jobs:
   create-release:
@@ -73,7 +91,10 @@ jobs:
       platform: ${{ matrix.platform }}
       target: ${{ matrix.target }}
       build-args: ${{ matrix.args }}
-      sign-binaries: true
+      # OpenWhisper ships unsigned by default — see workflow header.
+      # Override via the Run workflow → "Code-sign binaries" toggle
+      # when the cert secrets are configured.
+      sign-binaries: ${{ inputs.sign }}
       asset-prefix: "openwhisper"
       upload-artifacts: false
       release-id: ${{ needs.create-release.outputs.release-id }}
