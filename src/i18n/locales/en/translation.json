@@ -58,6 +58,45 @@
         "provisioning": "Auto-setup failed"
       }
     },
+    "micTest": {
+      "title": "Test your microphone",
+      "description": "Click \"Start mic test\" (or press {{hotkey}}) and say a few words. The bars should light up.",
+      "startButton": "Start mic test",
+      "recordingButton": "Recording…",
+      "continueButton": "Continue",
+      "skipButton": "Skip this step",
+      "idle": "Click \"Start mic test\" or press {{hotkey}} and speak — the bars should react.",
+      "recording": "Speak now — auto-stops in 5 seconds.",
+      "detected": "Audio detected. You're good to go.",
+      "noAudio": "No audio detected. Check your microphone in Settings → General."
+    },
+    "hotkeyConfig": {
+      "title": "Pick your dictation hotkey",
+      "description": "Press and hold this key combination anywhere in your OS to dictate.",
+      "loading": "Loading hotkey settings…",
+      "hint": "You can change this later under Settings → Shortcuts. We default to Ctrl+Space on Windows / Linux and Option+Space on macOS.",
+      "continueButton": "Save & continue"
+    },
+    "firstDictation": {
+      "title": "Three ways to dictate",
+      "description": "OpenWhisper has three entry points — pick whichever fits your flow.",
+      "continueButton": "I'm ready",
+      "stepLabel": "Step {{step}}",
+      "cards": {
+        "dictate": {
+          "title": "Hold to dictate",
+          "body": "Press and hold {{hotkey}} anywhere in your OS, speak, then release. The transcript is pasted into the active app."
+        },
+        "widget": {
+          "title": "Click the widget",
+          "body": "The floating widget at the bottom of your screen does the same thing — handy when your hands are away from the keyboard."
+        },
+        "commandMode": {
+          "title": "Highlight & rewrite",
+          "body": "Highlight any text, hold {{hotkey}}, and speak an instruction like \"make this more polite\" — OpenWhisper rewrites the selection in place."
+        }
+      }
+    },
     "modelCard": {
       "accuracy": "accuracy",
       "speed": "speed"

@@ -224,6 +224,141 @@ jobs:
           sudo apt install vulkan-sdk -y
           sudo apt-get install -y mesa-vulkan-drivers
 
+      # ------------------------------------------------------------------
+      # OpenWhisper Phase Finalize.F — bundle Whisper Tiny + llama-server
+      # ------------------------------------------------------------------
+      # Whisper Tiny (~75 MB) ships with the installer so first-run users
+      # get instant dictation while the auto_provisioner downloads a bigger
+      # tier in the background. Whisper Small is the auto-provisioner's
+      # default target on most hardware — bundling it is optional (adds
+      # ~470 MB to the installer) and gated behind the WHISPER_SMALL_BUNDLE
+      # env knob below; users who don't bundle still get the model via the
+      # provisioner's first-run download.
+      - name: Bundle Whisper Tiny model
+        shell: bash
+        run: |
+          set -e
+          mkdir -p src-tauri/resources/models
+          if [ ! -f src-tauri/resources/models/ggml-tiny.bin ]; then
+            echo "Downloading Whisper Tiny (~75 MB)…"
+            curl -L --fail --retry 3 \
+              -o src-tauri/resources/models/ggml-tiny.bin \
+              "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-tiny.bin"
+          else
+            echo "Whisper Tiny already cached"
+          fi
+          ls -la src-tauri/resources/models/
+
+      - name: Bundle Whisper Small model (optional, ~470 MB)
+        if: env.WHISPER_SMALL_BUNDLE == 'true'
+        shell: bash
+        run: |
+          set -e
+          if [ ! -f src-tauri/resources/models/ggml-small.bin ]; then
+            echo "Downloading Whisper Small (~470 MB)…"
+            curl -L --fail --retry 3 \
+              -o src-tauri/resources/models/ggml-small.bin \
+              "https://huggingface.co/ggerganov/whisper.cpp/resolve/main/ggml-small.bin"
+          else
+            echo "Whisper Small already cached"
+          fi
+
+      # llama-server is the inference backend for Phase 1.6 local LLM
+      # cleanup. We bundle the prebuilt binary for the host platform so
+      # users with no Ollama install still get auto-cleanup out of the box.
+      # The release matrix pulls from llama.cpp's official GitHub Releases
+      # — these binaries are CPU-only by default but ship with Vulkan +
+      # Metal acceleration on the relevant platforms.
+      - name: Bundle llama-server (macOS arm64)
+        if: contains(inputs.platform, 'macos') && contains(inputs.target, 'aarch64')
+        shell: bash
+        run: |
+          set -e
+          mkdir -p src-tauri/resources/llama-cpp
+          if [ ! -f src-tauri/resources/llama-cpp/llama-server ]; then
+            LLAMA_TAG="b4500"
+            URL="https://github.com/ggml-org/llama.cpp/releases/download/${LLAMA_TAG}/llama-${LLAMA_TAG}-bin-macos-arm64.zip"
+            echo "Downloading $URL"
+            curl -L --fail --retry 3 -o llama.zip "$URL" || {
+              echo "llama-server download failed (release may not exist); skipping bundle"
+              exit 0
+            }
+            unzip -q llama.zip -d llama-extracted
+            # llama-server binary lives at bin/llama-server in the zip
+            find llama-extracted -name "llama-server" -type f -exec \
+              cp {} src-tauri/resources/llama-cpp/llama-server \;
+            chmod +x src-tauri/resources/llama-cpp/llama-server || true
+            rm -rf llama-extracted llama.zip
+          fi
+          ls -la src-tauri/resources/llama-cpp/ || true
+
+      - name: Bundle llama-server (macOS x86_64)
+        if: contains(inputs.platform, 'macos') && !contains(inputs.target, 'aarch64')
+        shell: bash
+        run: |
+          set -e
+          mkdir -p src-tauri/resources/llama-cpp
+          if [ ! -f src-tauri/resources/llama-cpp/llama-server ]; then
+            LLAMA_TAG="b4500"
+            URL="https://github.com/ggml-org/llama.cpp/releases/download/${LLAMA_TAG}/llama-${LLAMA_TAG}-bin-macos-x64.zip"
+            echo "Downloading $URL"
+            curl -L --fail --retry 3 -o llama.zip "$URL" || {
+              echo "llama-server download failed; skipping bundle"
+              exit 0
+            }
+            unzip -q llama.zip -d llama-extracted
+            find llama-extracted -name "llama-server" -type f -exec \
+              cp {} src-tauri/resources/llama-cpp/llama-server \;
+            chmod +x src-tauri/resources/llama-cpp/llama-server || true
+            rm -rf llama-extracted llama.zip
+          fi
+
+      - name: Bundle llama-server (Linux x86_64)
+        if: contains(inputs.platform, 'ubuntu') && !contains(inputs.platform, 'arm')
+        shell: bash
+        run: |
+          set -e
+          mkdir -p src-tauri/resources/llama-cpp
+          if [ ! -f src-tauri/resources/llama-cpp/llama-server ]; then
+            LLAMA_TAG="b4500"
+            URL="https://github.com/ggml-org/llama.cpp/releases/download/${LLAMA_TAG}/llama-${LLAMA_TAG}-bin-ubuntu-vulkan-x64.zip"
+            echo "Downloading $URL"
+            curl -L --fail --retry 3 -o llama.zip "$URL" || {
+              echo "llama-server download failed; skipping bundle"
+              exit 0
+            }
+            unzip -q llama.zip -d llama-extracted
+            find llama-extracted -name "llama-server" -type f -exec \
+              cp {} src-tauri/resources/llama-cpp/llama-server \;
+            chmod +x src-tauri/resources/llama-cpp/llama-server || true
+            rm -rf llama-extracted llama.zip
+          fi
+
+      - name: Bundle llama-server (Windows x86_64)
+        if: contains(inputs.platform, 'windows') && !contains(inputs.target, 'aarch64')
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = "Stop"
+          New-Item -ItemType Directory -Force -Path src-tauri/resources/llama-cpp | Out-Null
+          $existing = "src-tauri/resources/llama-cpp/llama-server.exe"
+          if (-not (Test-Path $existing)) {
+            $tag = "b4500"
+            $url = "https://github.com/ggml-org/llama.cpp/releases/download/$tag/llama-$tag-bin-win-vulkan-x64.zip"
+            Write-Host "Downloading $url"
+            try {
+              Invoke-WebRequest -Uri $url -OutFile llama.zip
+              Expand-Archive -Path llama.zip -DestinationPath llama-extracted -Force
+              $serverBin = Get-ChildItem -Path llama-extracted -Recurse -Filter "llama-server.exe" | Select-Object -First 1
+              if ($serverBin) {
+                Copy-Item $serverBin.FullName $existing
+              }
+              Remove-Item -Recurse -Force llama-extracted, llama.zip
+            } catch {
+              Write-Warning "llama-server download failed: $_. Skipping bundle."
+            }
+          }
+          Get-ChildItem src-tauri/resources/llama-cpp -ErrorAction SilentlyContinue
+
       - name: install frontend dependencies
         if: ${{ !(contains(inputs.platform, 'windows') && contains(inputs.target, 'aarch64')) }}
         run: bun install

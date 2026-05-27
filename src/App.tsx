@@ -14,6 +14,9 @@ import Footer from "./components/footer";
 import Onboarding, {
   AccessibilityOnboarding,
   AutoSetupStep,
+  MicTestStep,
+  HotkeyConfigStep,
+  FirstDictationStep,
 } from "./components/onboarding";
 import { Sidebar, SidebarSection, SECTIONS_CONFIG } from "./components/Sidebar";
 import { useSettings } from "./hooks/useSettings";
@@ -25,6 +28,9 @@ type OnboardingStep =
   | "accessibility"
   | "auto-setup" // Phase 1.5b: zero-touch first-run (default)
   | "model" // legacy manual picker, used as "advanced" escape hatch
+  | "mic-test" // Phase Finalize.E: confirm mic actually works
+  | "hotkey-config" // Phase Finalize.E: let user customise push-to-talk before first use
+  | "first-dictation" // Phase Finalize.E: tutorial cards
   | "done";
 
 const renderSettingsContent = (section: SidebarSection) => {
@@ -239,7 +245,11 @@ function App() {
   };
 
   const handleAutoSetupComplete = () => {
-    setOnboardingStep("done");
+    // Phase Finalize.E — after the model lands, walk the user through
+    // mic-test → hotkey-config → first-dictation tutorial before
+    // dropping them in the main app. Returning users skip all of this
+    // and go straight to "done" via the accessibility path above.
+    setOnboardingStep("mic-test");
   };
 
   const handleAutoSetupAdvanced = () => {
@@ -248,7 +258,20 @@ function App() {
   };
 
   const handleModelSelected = () => {
-    // Transition to main app - user has started a download
+    // Manual picker flow also benefits from the polish steps so the
+    // user gets the same level of orientation.
+    setOnboardingStep("mic-test");
+  };
+
+  const handleMicTestComplete = () => {
+    setOnboardingStep("hotkey-config");
+  };
+
+  const handleHotkeyConfigComplete = () => {
+    setOnboardingStep("first-dictation");
+  };
+
+  const handleFirstDictationComplete = () => {
     setOnboardingStep("done");
   };
 
@@ -272,6 +295,25 @@ function App() {
 
   if (onboardingStep === "model") {
     return <Onboarding onModelSelected={handleModelSelected} />;
+  }
+
+  if (onboardingStep === "mic-test") {
+    return (
+      <MicTestStep
+        onComplete={handleMicTestComplete}
+        onSkip={handleMicTestComplete}
+      />
+    );
+  }
+
+  if (onboardingStep === "hotkey-config") {
+    return <HotkeyConfigStep onComplete={handleHotkeyConfigComplete} />;
+  }
+
+  if (onboardingStep === "first-dictation") {
+    return (
+      <FirstDictationStep onComplete={handleFirstDictationComplete} />
+    );
   }
 
   return (

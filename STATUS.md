@@ -98,36 +98,54 @@ backend commands are ready; the visible UI sections are not.
   Stays on screen in an idle clickable state between dictations. Click triggers
   the same flow as the push-to-talk hotkey via `trigger_dictation_from_widget`.
   User-controllable enable/disable + opacity slider in Advanced → App.
-- ❌ Onboarding wizard polish: mic-test step, hotkey-config step, first-dictation tutorial.
-- ❌ Style presets per app category (Formal / Casual / Very Casual / Excited).
+- ✅ **Onboarding wizard polish** — Phase Finalize.E. Three new steps inserted
+  between auto-setup and "done": `MicTestStep` (live VU meter + Start button),
+  `HotkeyConfigStep` (inline ShortcutInput for transcribe binding),
+  `FirstDictationStep` (3-card tutorial with the user's actual hotkeys).
+- ✅ **Style presets per app category** — Phase Finalize.D. New
+  `style_presets.rs` module (Formal / Casual / VeryCasual / Concise / Neutral)
+  + `AppCategory` classifier (Email / Chat / Code / Document / Other) +
+  per-category overrides persisted in `AppSettings.style_overrides`. Cleanup
+  LLM system prompt now prepends the active preset's fragment.
 
 ## Not done — wire-up between backend modules
 
-- ❌ Symbol extraction from the focused editor (feeds `known_symbols` into `vibe_coding::apply`).
-  Needs the accessibility-tree reader on macOS / Windows / Linux. Backend code is ready
-  to consume the list once it exists.
+- ✅ **Symbol extraction** — Phase Finalize.C. New `symbols.rs` does a Windows
+  UI Automation tree walk on the focused HWND, extracts identifier-shaped
+  tokens (`camelCase` / `snake_case` / digits), and feeds them into
+  `vibe_coding::apply` as `known_symbols`. macOS / Linux still stubbed.
 - ✅ **Per-app routing in `actions.rs`**: `process_transcription_output` now calls
   `active_app::detect()` once per dictation and runs the result through
   `vibe_coding::apply` before paste. File-tagging fires for IDEs and agent terminals;
-  backtick-wrapping fires only in IDEs. Symbol list is currently empty (waiting on
-  the accessibility-tree probe above) — the variable-recognition pass is a no-op
-  until that lands.
-- ❌ Auto-trigger of `auto_provisioner::provision` from `initialize_core_logic` so first-run
-  actually kicks off the flow without the UI needing to call it.
-- ❌ Command Mode hotkey wiring: capture selection via Cmd/Ctrl+C, dispatch through
-  the existing transcription_coordinator with the captured selection.
-- ❌ Transforms hotkey registration: register each `TransformBinding.hotkey` on app launch
-  + per-binding event handler.
+  backtick-wrapping fires only in IDEs.
+- ✅ **Auto-trigger of `auto_provisioner::provision`** — Phase Finalize.B.
+  `lib::maybe_auto_provision` fires 1.5s after init when no model is selected
+  and none are downloaded. Uses Ollama detection + system probe.
+- ✅ **Command Mode hotkey wiring** — Phase Finalize.A. `CommandModeAction`
+  captures selection via Ctrl+C → reads clipboard → stores in NEXT_PROCESSING
+  → dispatches through TranscribeAction recording path → in
+  `process_transcription_output`, branches to `command_mode::build_prompts`
+  + LLM + paste. Default hotkey: Ctrl+Alt+Space (Win/Linux) / Cmd+Ctrl+Space (Mac).
+- ✅ **Transforms hotkey registration** — Phase Finalize.A.
+  `shortcut::register_transform_hotkeys` walks `settings.transforms` on app
+  launch and registers `transform:<id>` global shortcuts for every transform
+  with a `hotkey` set. `actions::TransformAction` then routes the dictation
+  through the transform's prompt template + LLM before paste.
 
 ## Not done — production-readiness blockers
 
 These can't be solved from a Windows dev machine without external artifacts:
 
-- ❌ **llama.cpp binaries** for Mac (Metal), Windows (Vulkan), Linux (Vulkan + ROCm).
-  Need a GitHub Actions matrix that builds llama.cpp per-OS and drops the binary into
-  `src-tauri/resources/llama-cpp/` before `tauri build`.
-- ❌ **Bundled Whisper Tiny + Small** in the installer (~540 MB) — also fetched at
-  release-build time, not committed to git.
+- ✅ **llama.cpp binaries** — Phase Finalize.F. `build.yml` now downloads
+  prebuilt `llama-server` from the upstream `llama.cpp` GitHub releases
+  per-OS (macOS arm64/x86_64, Linux x86_64 Vulkan, Windows x86_64 Vulkan)
+  into `src-tauri/resources/llama-cpp/` before `tauri build`. Bundled
+  resource glob picks them up automatically.
+- ✅ **Bundled Whisper Tiny** in the installer (~75 MB) — Phase Finalize.F.
+  CI downloads `ggml-tiny.bin` into `src-tauri/resources/models/`. Whisper
+  Small bundling is optional via `WHISPER_SMALL_BUNDLE=true` env (adds
+  ~470 MB to installer); without it the model still arrives via the
+  first-run auto-provisioner.
 - ❌ **Vulkan SDK install** on Windows for GPU acceleration. The Cargo.toml feature
   is commented out; needs admin elevation to install the SDK then uncomment.
 - ❌ **Code-signing certs**: Apple Developer ID for `.dmg` notarisation, Windows EV cert

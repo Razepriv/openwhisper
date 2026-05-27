@@ -45,7 +45,9 @@ export const TransformsSettings: React.FC = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [preview, setPreview] = useState<string | null>(null);
-  const [previewSample, setPreviewSample] = useState("Hello world, this is a test.");
+  const [previewSample, setPreviewSample] = useState(
+    "Hello world, this is a test.",
+  );
 
   const refresh = useCallback(async () => {
     try {
@@ -259,11 +261,7 @@ export const TransformsSettings: React.FC = () => {
             <pre className="text-xs whitespace-pre-wrap bg-mid-gray/10 rounded-md p-3 max-h-64 overflow-auto">
               {preview}
             </pre>
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setPreview(null)}
-            >
+            <Button variant="ghost" size="sm" onClick={() => setPreview(null)}>
               {t("common.close")}
             </Button>
           </div>

@@ -169,8 +169,13 @@ impl ModelManager {
     }
 
     fn migrate_bundled_models(&self) -> Result<()> {
-        // Check for bundled models and copy them to user directory
-        let bundled_models = ["ggml-small.bin"]; // Add other bundled models here if any
+        // Check for bundled models and copy them to user directory.
+        // OpenWhisper Phase Finalize.F: the release CI workflow fetches
+        // Whisper Tiny + Small from Hugging Face into src-tauri/resources/models/
+        // before the Tauri build. Both names live here so the migration runs
+        // on first launch whether one or both files were bundled (Tiny ships
+        // by default for instant first-use; Small is a quality upgrade).
+        let bundled_models = ["ggml-tiny.bin", "ggml-small.bin"];
 
         for filename in &bundled_models {
             let bundled_path = self.app_handle.path().resolve(

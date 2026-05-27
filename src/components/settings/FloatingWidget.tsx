@@ -34,23 +34,18 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = React.memo(
     // because the field is always present at runtime — serde default
     // kicks in for legacy settings files that predate the addition.
     const widgetEnabled =
-      (getSetting("floating_widget_enabled" as never) as
-        | boolean
-        | undefined) ?? true;
+      (getSetting("floating_widget_enabled" as never) as boolean | undefined) ??
+      true;
     const widgetOpacity =
-      (getSetting("floating_widget_opacity" as never) as
-        | number
-        | undefined) ?? 0.9;
+      (getSetting("floating_widget_opacity" as never) as number | undefined) ??
+      0.9;
 
     return (
       <div className="flex flex-col gap-2">
         <ToggleSwitch
           checked={widgetEnabled}
           onChange={(enabled) =>
-            updateSetting(
-              "floating_widget_enabled" as never,
-              enabled as never,
-            )
+            updateSetting("floating_widget_enabled" as never, enabled as never)
           }
           isUpdating={isUpdating("floating_widget_enabled")}
           label={t("settings.advanced.floatingWidget.title")}
@@ -62,10 +57,7 @@ export const FloatingWidget: React.FC<FloatingWidgetProps> = React.memo(
           <Slider
             value={widgetOpacity}
             onChange={(value: number) =>
-              updateSetting(
-                "floating_widget_opacity" as never,
-                value as never,
-              )
+              updateSetting("floating_widget_opacity" as never, value as never)
             }
             min={0.2}
             max={1.0}

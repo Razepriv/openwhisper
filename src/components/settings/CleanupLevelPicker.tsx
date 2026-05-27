@@ -42,8 +42,9 @@ export const CleanupLevelPicker: React.FC<CleanupLevelPickerProps> = ({
   // new field exists. Runtime works either way because the field IS in
   // the persisted AppSettings JSON.
   const current =
-    (getSetting("cleanup_level" as never) as unknown as CleanupLevel | undefined) ??
-    "light";
+    (getSetting("cleanup_level" as never) as unknown as
+      | CleanupLevel
+      | undefined) ?? "light";
 
   const options: Array<{ value: CleanupLevel; label: string }> = [
     { value: "none", label: t("settings.cleanupLevel.none") },

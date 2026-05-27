@@ -62,8 +62,14 @@ export const InsightsSettings: React.FC = () => {
     refresh();
   }, [refresh]);
 
-  const maxDaily = Math.max(1, ...(profile?.daily_word_counts.map((d) => d.words) ?? [0]));
-  const maxHourly = Math.max(1, ...(profile?.hourly_word_counts.map((h) => h.words) ?? [0]));
+  const maxDaily = Math.max(
+    1,
+    ...(profile?.daily_word_counts.map((d) => d.words) ?? [0]),
+  );
+  const maxHourly = Math.max(
+    1,
+    ...(profile?.hourly_word_counts.map((h) => h.words) ?? [0]),
+  );
 
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
@@ -79,7 +85,9 @@ export const InsightsSettings: React.FC = () => {
       </SettingsGroup>
 
       {loading && (
-        <p className="text-sm text-mid-gray text-center">{t("common.loading")}</p>
+        <p className="text-sm text-mid-gray text-center">
+          {t("common.loading")}
+        </p>
       )}
 
       {!loading && profile && (
