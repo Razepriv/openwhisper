@@ -179,9 +179,29 @@ function App() {
   };
 
   const checkOnboardingStatus = async () => {
+    // Phase Final.Web: race the model-availability check against a
+    // 6-second timeout. If the Rust backend hangs (e.g. when a setup-
+    // callback panic prevented the ModelManager state from being
+    // registered), we still drop the user onto the accessibility step
+    // so they get a usable UI rather than an infinite white screen.
+    const TIMEOUT_MS = 6000;
+    type Result = { status: "ok"; data: boolean } | { status: "error"; error: string };
+    const probe = commands.hasAnyModelsAvailable() as unknown as Promise<Result>;
+    const timeout = new Promise<{ status: "timeout" }>((resolve) =>
+      setTimeout(() => resolve({ status: "timeout" }), TIMEOUT_MS),
+    );
     try {
-      // Check if they have any models available
-      const result = await commands.hasAnyModelsAvailable();
+      const result = (await Promise.race([probe, timeout])) as Result | { status: "timeout" };
+      if (result.status === "timeout") {
+        console.warn(
+          "hasAnyModelsAvailable did not respond within",
+          TIMEOUT_MS,
+          "ms — defaulting to accessibility onboarding",
+        );
+        setIsReturningUser(false);
+        setOnboardingStep("accessibility");
+        return;
+      }
       const hasModels = result.status === "ok" && result.data;
       const currentPlatform = platform();
 
@@ -275,9 +295,20 @@ function App() {
     setOnboardingStep("done");
   };
 
-  // Still checking onboarding status
+  // Still checking onboarding status — show a loading screen instead of
+  // a bare `return null` (which renders an indistinguishable-from-broken
+  // white screen). The check is timed out at 6s so this state is never
+  // permanent.
   if (onboardingStep === null) {
-    return null;
+    return (
+      <div className="min-h-screen flex flex-col items-center justify-center bg-background text-text gap-3">
+        {/* eslint-disable-next-line i18next/no-literal-string */}
+        <div className="text-lg font-semibold">OpenWhisper</div>
+        <div className="text-sm text-mid-gray animate-pulse">
+          {t("common.loading", "Loading…")}
+        </div>
+      </div>
+    );
   }
 
   if (onboardingStep === "accessibility") {
@@ -311,9 +342,7 @@ function App() {
   }
 
   if (onboardingStep === "first-dictation") {
-    return (
-      <FirstDictationStep onComplete={handleFirstDictationComplete} />
-    );
+    return <FirstDictationStep onComplete={handleFirstDictationComplete} />;
   }
 
   return (

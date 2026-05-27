@@ -659,7 +659,20 @@ pub fn run(cli_args: CliArgs) {
             specta_builder.mount_events(app);
 
             // Create main window programmatically so we can set data_directory
-            // for portable mode (redirects WebView2 cache to portable Data dir)
+            // for portable mode (redirects WebView2 cache to portable Data dir).
+            //
+            // OpenWhisper change vs Handy upstream: we build the window with
+            // `.visible(true)` instead of `.visible(false)`. Upstream relies on
+            // the `show_main_window` call later in setup() to make the window
+            // visible, but if anything in `initialize_core_logic` panics
+            // between window creation and show_main_window (e.g. a tray icon
+            // path resolution issue or a manager initialisation failure), the
+            // panic unwinds the setup callback but the webview event loop
+            // keeps running — leaving a permanently invisible main window.
+            // Starting visible-by-default means the user always gets the
+            // window, and `start_hidden` is handled by hiding it AFTER init
+            // succeeds (see show_or_hide_after_init below).
+            let initial_visible = !(cli_args.start_hidden);
             let mut win_builder =
                 tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("/".into()))
                     .title("OpenWhisper")
@@ -667,7 +680,7 @@ pub fn run(cli_args: CliArgs) {
                     .min_inner_size(680.0, 570.0)
                     .resizable(true)
                     .maximizable(false)
-                    .visible(false);
+                    .visible(initial_visible);
 
             if let Some(data_dir) = portable::data_dir() {
                 win_builder = win_builder.data_directory(data_dir.join("webview"));
@@ -690,7 +703,28 @@ pub fn run(cli_args: CliArgs) {
             let app_handle = app.handle().clone();
             app.manage(TranscriptionCoordinator::new(app_handle.clone()));
 
-            initialize_core_logic(&app_handle);
+            // OpenWhisper change: wrap initialize_core_logic in catch_unwind
+            // so any panic during manager init / tray setup / autostart
+            // configuration doesn't silently abort the rest of the setup
+            // callback (which would leave the user staring at an invisible
+            // window with no tray icon and no path to recovery). The panic
+            // is logged, then setup continues — the user still gets the
+            // main window via the subsequent show_main_window call.
+            let init_handle = app_handle.clone();
+            let init_result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| {
+                initialize_core_logic(&init_handle);
+            }));
+            if let Err(panic_payload) = init_result {
+                let msg = panic_payload
+                    .downcast_ref::<&'static str>()
+                    .map(|s| s.to_string())
+                    .or_else(|| panic_payload.downcast_ref::<String>().cloned())
+                    .unwrap_or_else(|| "<unknown panic payload>".to_string());
+                log::error!(
+                    "initialize_core_logic panicked: {}. The app will continue with degraded functionality.",
+                    msg
+                );
+            }
 
             // Pre-warm GPU/accelerator enumeration on a background thread.
             // The first call into transcribe_rs::whisper_cpp::gpu::list_gpu_devices

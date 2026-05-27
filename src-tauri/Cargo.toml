@@ -35,6 +35,13 @@ tauri = { version = "2.10.2", features = [
   "macos-private-api",
   "tray-icon",
   'image-png',
+  # OpenWhisper: keep devtools available in release builds too, so
+  # users running an unsigned local build can press F12 / Ctrl+Shift+I
+  # to surface errors. The runtime cost is negligible (a few KB) and
+  # the debugging payoff during white-screen-of-death situations is
+  # huge. Disable this for a "shipped to end users" build if you want
+  # to lock down inspection.
+  'devtools',
 ] }
 tauri-plugin-log = "2.7.1"
 tauri-plugin-opener = "2.5.2"
