@@ -1,5 +1,6 @@
 mod actions;
 mod active_app;
+mod focus_capture;
 #[cfg(all(target_os = "macos", target_arch = "aarch64"))]
 mod apple_intelligence;
 mod audio_feedback;
@@ -456,6 +457,7 @@ pub fn run(cli_args: CliArgs) {
             shortcut::change_floating_widget_enabled_setting,
             shortcut::change_floating_widget_opacity_setting,
             shortcut::change_theme_setting,
+            shortcut::change_vibe_coding_enabled_setting,
             shortcut::change_debug_mode_setting,
             shortcut::change_word_correction_threshold_setting,
             shortcut::change_extra_recording_buffer_setting,

@@ -605,6 +605,20 @@ pub fn paste(text: String, app_handle: AppHandle) -> Result<(), String> {
         paste_method, paste_delay_ms
     );
 
+    // handy fix: if dictation was triggered by clicking the floating
+    // widget (or tray), the user's focus has shifted away from their
+    // editor. Restore it BEFORE paste so the text lands in the right
+    // place. No-op when triggered by a global hotkey (focus never
+    // left the editor) or on non-Windows (Wayland focus handling is
+    // compositor-specific — TODO).
+    let restored = crate::focus_capture::take_and_restore();
+    if restored {
+        // Give Windows a beat to process the SetForegroundWindow before
+        // we start typing. 60 ms is empirically enough on a typical
+        // Win11 desktop without feeling laggy.
+        std::thread::sleep(std::time::Duration::from_millis(60));
+    }
+
     // Get the managed Enigo instance
     let enigo_state = app_handle
         .try_state::<EnigoState>()

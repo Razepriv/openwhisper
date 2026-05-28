@@ -686,6 +686,21 @@ pub fn change_floating_widget_opacity_setting(
     Ok(())
 }
 
+/// handy — toggle Vibe Coding on/off. When false the
+/// post-transcription IDE/agent rewrite (file-tagging, identifier
+/// backtick-wrap) is skipped regardless of the focused app.
+#[tauri::command]
+#[specta::specta]
+pub fn change_vibe_coding_enabled_setting(
+    app: AppHandle,
+    enabled: bool,
+) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.vibe_coding_enabled = enabled;
+    settings::write_settings(&app, settings);
+    Ok(())
+}
+
 /// handy Phase Final.UI — persist the user's theme preference
 /// ("system" / "light" / "dark"). The `<html data-theme>` swap happens
 /// client-side in `ThemeToggle.tsx` for instant feedback; this command

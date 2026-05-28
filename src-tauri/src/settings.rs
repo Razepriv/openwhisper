@@ -529,6 +529,16 @@ pub struct AppSettings {
     /// the React app on every load. Persisted across sessions.
     #[serde(default)]
     pub theme: ThemePreference,
+    /// handy — toggle the Vibe Coding post-dictation rewriter on/off.
+    /// When false, transcription is pasted verbatim regardless of the
+    /// focused app (no file-tagging, no backtick-wrapping of identifiers).
+    /// Default true because the rewrites are non-destructive (file-tag
+    /// substitutions are explicit triggers like "tag main.py") and
+    /// only activate when the focused app classifies as an IDE / agent
+    /// terminal. Users who write code in apps that misclassify can
+    /// flip this off.
+    #[serde(default = "default_vibe_coding_enabled")]
+    pub vibe_coding_enabled: bool,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -619,6 +629,13 @@ fn default_floating_widget_enabled() -> bool {
 
 fn default_floating_widget_opacity() -> f32 {
     0.9
+}
+
+/// Vibe Coding ships ON by default — the rewrites are conservative
+/// (only fire when the focused app classifies as a known IDE / agent
+/// terminal) and produce strictly better text when they do fire.
+fn default_vibe_coding_enabled() -> bool {
+    true
 }
 
 fn default_debug_mode() -> bool {
@@ -1089,6 +1106,7 @@ pub fn get_default_settings() -> AppSettings {
         transforms: default_transforms(),
         style_overrides: HashMap::new(),
         theme: ThemePreference::default(),
+        vibe_coding_enabled: default_vibe_coding_enabled(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),

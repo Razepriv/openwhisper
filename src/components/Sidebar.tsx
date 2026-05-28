@@ -12,6 +12,7 @@ import {
   Wand2,
   BarChart3,
   StickyNote,
+  Code2,
 } from "lucide-react";
 import HandyTextLogo from "./icons/HandyTextLogo";
 import HandyHand from "./icons/HandyHand";
@@ -29,6 +30,7 @@ import {
   TransformsSettings,
   InsightsSettings,
   NotesSettings,
+  VibeCodingSettings,
 } from "./settings";
 
 export type SidebarSection = keyof typeof SECTIONS_CONFIG;
@@ -78,6 +80,12 @@ export const SECTIONS_CONFIG = {
     labelKey: "sidebar.transforms",
     icon: Wand2,
     component: TransformsSettings,
+    enabled: () => true,
+  },
+  vibecoding: {
+    labelKey: "sidebar.vibeCoding",
+    icon: Code2,
+    component: VibeCodingSettings,
     enabled: () => true,
   },
   insights: {

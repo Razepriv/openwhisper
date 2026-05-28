@@ -461,8 +461,15 @@ pub fn prepare_command_mode(
 /// widget when it's in its idle state. Equivalent to pressing the
 /// configured push-to-talk shortcut. Idempotent — if a dictation is
 /// already in flight, the coordinator collapses the call.
+///
+/// handy fix: capture the foreground window's HWND BEFORE the click
+/// shifts focus to our window. The paste path later restores focus
+/// via `focus_capture::take_and_restore()` so the transcribed text
+/// lands in the editor / chat box / form field the user was last in
+/// — not in our own window.
 #[specta::specta]
 #[tauri::command]
 pub fn trigger_dictation_from_widget(app: AppHandle) {
+    crate::focus_capture::capture();
     crate::signal_handle::send_transcription_input(&app, "transcribe", "FloatingWidget");
 }

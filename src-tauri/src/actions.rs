@@ -593,7 +593,7 @@ pub(crate) async fn process_transcription_output(
     // Vibe Coding does NOT run for Transforms or Command Mode — the
     // user explicitly opted into a rewrite there, and applying
     // identifier markup on top would be surprising.
-    if matches!(next, NextProcessing::Standard) {
+    if matches!(next, NextProcessing::Standard) && settings.vibe_coding_enabled {
         let active_app = crate::active_app::detect();
         if !active_app.is_empty() {
             let symbols = crate::symbols::extract_visible_symbols(&active_app);

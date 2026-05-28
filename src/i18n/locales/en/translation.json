@@ -19,6 +19,7 @@
     "dictionary": "Dictionary",
     "snippets": "Snippets",
     "transforms": "Transforms",
+    "vibeCoding": "Vibe Coding",
     "insights": "Insights",
     "notes": "Notes"
   },
@@ -286,6 +287,37 @@
         "delete": "Could not delete transform",
         "preview": "Could not render preview",
         "required": "Name and prompt are required"
+      }
+    },
+    "vibeCoding": {
+      "title": "Vibe Coding",
+      "description": "IDE-aware dictation rewrites — file-tagging in IDEs and coding-agent terminals, identifier backtick-wrapping in IDEs only. Runs only when handy detects the focused app is one of the supported coding contexts.",
+      "toggle": {
+        "label": "Enable Vibe Coding",
+        "description": "When off, transcription pastes verbatim regardless of focused app."
+      },
+      "live": {
+        "title": "Live detection",
+        "subtitle": "Refreshes every 2 seconds. Switch to your editor or coding-agent terminal to see the context change.",
+        "focusedApp": "Focused app",
+        "context": "Detected context",
+        "noApp": "No focused app detected"
+      },
+      "supported": {
+        "title": "Supported apps",
+        "subtitle": "handy recognises these by their process name or window title. Add a request on GitHub if your editor is missing.",
+        "ides": "IDEs (graphical)",
+        "agents": "Coding agents in terminals"
+      },
+      "feature": {
+        "fileTag": "File-tagging (e.g. tag main.py → @main.py)",
+        "backtick": "Identifier backtick-wrapping (the user settings → `userSettings`)",
+        "noBacktick": "Backtick-wrapping disabled (shells evaluate backticks)"
+      },
+      "promptOptimizer": {
+        "title": "Prompt optimizer",
+        "subtitle": "Bind a hotkey to rewrite the last dictation as a high-quality LLM prompt. Already shipped as the default 'Prompt Engineer' transform — configure under Transforms.",
+        "body": "Dictate freely, then press your Prompt Engineer hotkey — the local LLM rewrites it as a structured, explicit prompt. Open Settings → Transforms to set or change the hotkey."
       }
     },
     "insights": {

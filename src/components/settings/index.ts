@@ -12,6 +12,7 @@ export { DictionarySettings } from "./dictionary/DictionarySettings";
 export { TransformsSettings } from "./transforms/TransformsSettings";
 export { InsightsSettings } from "./insights/InsightsSettings";
 export { NotesSettings } from "./notes/NotesSettings";
+export { VibeCodingSettings } from "./vibe-coding/VibeCodingSettings";
 
 // Individual setting components
 export { MicrophoneSelector } from "./MicrophoneSelector";

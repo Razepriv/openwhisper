@@ -54,6 +54,7 @@ updater.key*
 .openwhisper/
 
 .shot-*.png
+.shot.png
 .tauribuild.log
 .fixbuild.log
 .uirebuild.log

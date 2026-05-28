@@ -38,6 +38,12 @@ pub fn cancel_current_operation(app: &AppHandle) {
         coordinator.notify_cancel(recording_was_active);
     }
 
+    // handy fix: drop any focus capture from a widget-click dictation.
+    // Without this, a captured HWND from the cancelled session would
+    // still be the restore target for the NEXT dictation — confusing
+    // and almost certainly wrong.
+    crate::focus_capture::clear();
+
     info!("Operation cancellation completed - returned to idle state");
 }
 
