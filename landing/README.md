@@ -2,6 +2,8 @@
 
 Static marketing page for handy. Plain HTML/CSS/JS, no build step.
 
+**Live at** → [handy-landing-gamma.vercel.app](https://handy-landing-gamma.vercel.app)
+
 ## What's here
 
 ```
@@ -9,7 +11,8 @@ landing/
 ├── index.html      # the whole page
 ├── styles.css      # design tokens + layout (mirrors src/App.css)
 ├── script.js       # theme toggle, OS detection, footer year
-└── assets/         # any future images / screenshots
+├── vercel.json     # Vercel config (headers, CSP, cache rules)
+└── assets/         # screenshots / future images
 ```
 
 ## Preview locally
@@ -28,13 +31,51 @@ cd landing && bunx serve .
 
 ## Deploy
 
-Anywhere that serves static files. Three sensible options for handy:
+The page ships **live on Vercel** today. Two backup paths if you want
+mirrors or to fork the deploy:
 
-1. **GitHub Pages** — push to `gh-pages` branch or enable Pages on `main /landing`.
-2. **Cloudflare Pages** — connect the repo, set the build output directory to `landing/`.
-3. **Vercel / Netlify** — same idea, set the publish directory to `landing/`.
+### Vercel (production)
 
-No env vars, no secrets, no API routes. The download links resolve to GitHub Releases.
+Vercel project: `razeprivs-projects/handy-landing`. Two ways to ship a
+new version:
+
+```bash
+# CLI — auto-deploys whatever's in landing/ as production
+cd landing && bunx vercel --prod
+
+# Or via the dashboard
+# 1. Push to main (no build step — Vercel just uploads the folder)
+# 2. The connected Git integration auto-deploys
+```
+
+`vercel.json` in this folder sets:
+- Strict security headers (CSP, X-Frame-Options, Permissions-Policy)
+- Long-cache (`immutable`) on `/assets/*`
+- Hour-cache on `styles.css` / `script.js`
+- Clean URLs (no `.html` extension needed)
+
+The `.vercel/` folder (project ID + auth) is gitignored — anyone
+running `vercel link` from this folder gets prompted to link to the
+existing `handy-landing` project.
+
+### GitHub Pages (alternate / mirror)
+
+A workflow at `.github/workflows/landing.yml` deploys this folder to
+GitHub Pages on every push to `main`. Enable it once in repo settings:
+
+```
+Settings → Pages → Source = "GitHub Actions" → Save
+```
+
+Live URL after enabling: `https://razepriv.github.io/openwhisper/`.
+
+### Cloudflare Pages / Netlify
+
+Same idea — connect the repo, set the publish directory to `landing/`.
+No build command needed.
+
+No env vars, no secrets, no API routes. All download links resolve to
+GitHub Releases.
 
 ## Design system
 
