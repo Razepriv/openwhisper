@@ -1,28 +1,33 @@
-# OpenWhisper
+# handy
 
 **100% local, 100% free, Wispr-Flow-class voice dictation for Mac, Windows, and Linux.**
 
 Hold a hotkey anywhere on your computer, speak naturally, and clean formatted text is pasted at your cursor. Your voice never leaves your machine. Zero subscription. Zero telemetry. **Zero cloud, zero API.**
 
+> **Landing page** → [razepriv.github.io/openwhisper](https://razepriv.github.io/openwhisper/) · **Download v0.2.0** → [Releases](https://github.com/Razepriv/openwhisper/releases/latest)
+>
+> *The repository is still named `openwhisper` (the original project codename); the product name is `handy`.*
+
 ## Download
 
-Grab the latest installer for your OS from the [**Releases page**](https://github.com/Razepriv/openwhisper/releases).
+Grab the latest installer for your OS from the [**Releases page**](https://github.com/Razepriv/openwhisper/releases/latest).
 
-| OS                  | Asset                                   | What you'll see on first launch                                |
-| ------------------- | --------------------------------------- | -------------------------------------------------------------- |
-| **Windows 10/11**   | `OpenWhisper_x.y.z_x64_en-US.msi` or `OpenWhisper_x.y.z_x64-setup.exe` | SmartScreen warning → "More info" → "Run anyway". (We don't ship a code-signing cert.) |
-| **macOS (Apple Silicon)** | `OpenWhisper_x.y.z_aarch64.dmg`   | Gatekeeper warning → System Settings → Privacy & Security → "Open Anyway". |
-| **macOS (Intel)**   | `OpenWhisper_x.y.z_x64.dmg`             | Same Gatekeeper flow.                                          |
-| **Linux (x86_64)**  | `OpenWhisper_x.y.z_amd64.deb` / `.AppImage` / `.rpm` | Install via `dpkg -i` (Debian/Ubuntu) or just `chmod +x` and run the AppImage. |
-| **Linux (arm64)**   | `OpenWhisper_x.y.z_arm64.deb` / `.AppImage` / `.rpm` | Same.                                                    |
+| OS                        | Asset                                                                    | What you'll see on first launch                                                          |
+| ------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| **Windows 10/11 (x64)**   | `handy_0.2.0_x64-setup.exe` or `handy_0.2.0_x64_en-US.msi`               | SmartScreen warning → "More info" → "Run anyway". (We don't ship a code-signing cert.)   |
+| **Windows 11 (ARM64)**    | `handy_0.2.0_arm64-setup.exe` or `handy_0.2.0_arm64_en-US.msi`           | Same SmartScreen flow.                                                                   |
+| **macOS (Apple Silicon)** | `handy_0.2.0_aarch64.dmg`                                                | Gatekeeper warning → System Settings → Privacy & Security → "Open Anyway".               |
+| **macOS (Intel)**         | `handy_0.2.0_x64.dmg`                                                    | Same Gatekeeper flow.                                                                    |
+| **Linux (x86_64)**        | `handy_0.2.0_amd64.deb` / `handy-0.2.0-1.x86_64.rpm` / `.AppImage`       | `sudo dpkg -i handy_0.2.0_amd64.deb`, `sudo dnf install`, or `chmod +x ./*.AppImage`.    |
+| **Linux (arm64)**         | `handy_0.2.0_arm64.deb` / `handy-0.2.0-1.aarch64.rpm` / `.AppImage`      | Same.                                                                                    |
 
-OpenWhisper ships **unsigned by design** — we don't pay $99/yr to Apple or $300+/yr to a Windows EV cert authority just so you can run a local-only tool. The one-time "this app is unsigned" warning is a normal part of installing open-source software outside the App Store / Microsoft Store. After the first launch the OS remembers your choice.
+handy ships **unsigned by design** — we don't pay $99/yr to Apple or $300+/yr to a Windows EV cert authority just so you can run a local-only tool. The one-time "this app is unsigned" warning is a normal part of installing open-source software outside the App Store / Microsoft Store. After the first launch the OS remembers your choice.
 
-**Where to look for updates:** OpenWhisper has a built-in auto-updater that pulls from the same Releases page. Toggle it in Settings → About → "Check for updates".
+**Where to look for updates:** handy has a built-in auto-updater that pulls from the same Releases page. Toggle it in Settings → About → "Check for updates".
 
 ## Privacy guarantee
 
-OpenWhisper performs **all** transcription and AI cleanup on your own machine:
+handy performs **all** transcription and AI cleanup on your own machine:
 
 - **Speech recognition (Whisper / Parakeet / Moonshine)** — runs locally via `whisper.cpp` / `transcribe-rs`. The audio never hits the network.
 - **AI cleanup (the LLM pass)** — runs locally via one of:
@@ -30,42 +35,44 @@ OpenWhisper performs **all** transcription and AI cleanup on your own machine:
   - Phi Silica via Windows AI APIs (Windows 11 24H2+ on Copilot+ PCs) — OS-provided, on-device
   - Bundled `llama.cpp` sidecar with Gemma 3 / Phi-4 mini / Llama 3.2 weights — runs on `127.0.0.1`
   - Optional Ollama (if you've already installed it) — runs on `127.0.0.1`
-- **No cloud LLM providers ship with OpenWhisper.** The Handy upstream's OpenAI / Anthropic / Groq / Cerebras / Z.AI / OpenRouter / Bedrock-Mantle integrations were **removed** in Phase 1.10. Existing settings files that reference them are automatically migrated to local defaults on first launch.
+- **No cloud LLM providers ship with handy.** The Handy upstream's OpenAI / Anthropic / Groq / Cerebras / Z.AI / OpenRouter / Bedrock-Mantle integrations were **removed** in Phase 1.10. Existing settings files that reference them are automatically migrated to local defaults on first launch.
 - **Hard-coded URL whitelist.** The LLM client (`src-tauri/src/llm_client.rs::validate_local_url`) rejects any base URL that is not `127.0.0.1`, `::1`, `localhost`, `apple-intelligence://`, or `phi-silica://`. A bug in settings cannot leak transcripts off the machine — the network call itself is blocked.
 
-The only network access OpenWhisper makes is for:
+The only network access handy makes is for:
 1. Downloading model weights from Hugging Face on first run (one-time, no user data sent).
 2. Checking for app updates (opt-out in Settings).
 
-If you want a fully air-gapped install, pre-place the Whisper + GGUF model files into `~/.local/share/openwhisper/models/` (Linux), `~/Library/Application Support/openwhisper/models/` (macOS), or `%APPDATA%\openwhisper\models\` (Windows) before first launch, and disable update checks.
+If you want a fully air-gapped install, pre-place the Whisper + GGUF model files into `~/.local/share/ai.openwhisper.app/models/` (Linux), `~/Library/Application Support/ai.openwhisper.app/models/` (macOS), or `%APPDATA%\ai.openwhisper.app\models\` (Windows) before first launch, and disable update checks.
 
-> **Status:** Phase 0 — forked from [Handy](https://github.com/cjpais/Handy) (MIT) on 2026-05-24. Active development toward full Wispr Flow feature parity.
+> **Status:** v0.2.0 — first public release. Forked from [Handy](https://github.com/cjpais/Handy) (MIT) on 2026-05-24. See [release notes](./.github/RELEASE_NOTES_v0.2.0.md) for the full feature list shipped in this build.
 
-## Why OpenWhisper
+## Why handy
 
 [Wispr Flow](https://wisprflow.ai) is the polished commercial voice-dictation app loved by founders, devs, lawyers, and creators. It costs $12–15/month and **transmits every word you speak to its servers**. There is no offline mode.
 
-OpenWhisper delivers the same UX with one fundamental difference: **everything runs locally on your machine**. Speech recognition (Whisper), AI cleanup (Gemma / Phi / Apple Foundation Models / Phi Silica), dictionary biasing — all on-device.
+handy delivers the same UX with one fundamental difference: **everything runs locally on your machine**. Speech recognition (Whisper), AI cleanup (Gemma / Phi / Apple Foundation Models / Phi Silica), dictionary biasing — all on-device.
 
-## Key features (target — see [roadmap](./research/06-architecture-and-roadmap.md))
+## Key features (shipped in v0.2.0)
 
-- Push-to-talk + hands-free + mouse-button hotkeys
-- Whisper Large-v3 Turbo + Parakeet V3 (CPU-optimized) with auto-selection per system
-- AI auto-cleanup (4 levels) via Apple Foundation Models / Phi Silica / bundled llama.cpp
-- Personal Dictionary with auto-learn + `initial_prompt` biasing
-- Snippets / voice shortcuts (text expansion)
-- Command Mode — highlight text, speak edit instruction, get replacement
-- Per-app Style presets (Formal / Casual / Very Casual / Excited)
-- Vibe Coding — variable recognition + file tagging in Cursor / VS Code / Windsurf
-- Transforms — hotkey-bound post-dictation AI rewrites
-- Insights / Voice Profile dashboard (100% local data)
-- Scratchpad / Notes (markdown editor with image support)
+- Hold-to-dictate global hotkey (push-to-talk) + Floating Widget you can click instead
+- Whisper Tiny bundled out of the box; Small / Medium / Turbo auto-download based on hardware tier
+- Dedicated GPU auto-selected over integrated on dual-GPU laptops (Vulkan / Metal / CUDA via whisper.cpp)
+- AI auto-cleanup (4 levels) via bundled `llama.cpp` sidecar — no API key required
+- Command Mode — highlight any text, hold the hotkey, speak an instruction ("make this more polite") → text gets rewritten in place
+- Transforms — bind hotkeys to user-defined LLM rewrites (Polish + Prompt Engineer ship as defaults)
+- **Vibe Coding** — file-tagging (`"tag main.py" → @main.py`) and identifier backtick-wrapping (`"the user settings" → \`userSettings\``) in Cursor / VS Code / Windsurf / JetBrains / Claude Code / Codex; off everywhere else
+- **Focus restore** — clicking the widget no longer steals the paste target; the transcript lands in the editor you were last typing in
+- Personal Dictionary with starred priority entries (biases Whisper toward your jargon)
+- Snippets / text expansion triggered by phrases
+- Insights / Voice Profile dashboard (WPM, peak hours, top phrases) — 100% local
+- Scratchpad / Notes (local markdown editor)
 - 100+ languages with auto-detect per session
-- **Zero-touch auto-provisioning** — installer detects your hardware and downloads the optimal model stack ($0 cost)
+- Editorial UI with light / dark / system theme toggle (violet accent)
+- **Zero-touch auto-provisioning** — installer detects your hardware tier and downloads the optimal model stack on first run
 
 ## Built on the shoulders of giants
 
-OpenWhisper is a fork of [Handy](https://github.com/cjpais/Handy) (MIT, 22k stars). Massive credit to CJ Pais and the Handy contributors — without their work, this project would not exist. OpenWhisper extends Handy with a Wispr-Flow-class feature set targeted at productivity workers.
+handy is a fork of [Handy](https://github.com/cjpais/Handy) (MIT, 22k stars). Massive credit to CJ Pais and the Handy contributors — without their work, this project would not exist. handy extends Handy with a Wispr-Flow-class feature set targeted at productivity workers.
 
 Core libraries:
 - [whisper-rs](https://github.com/tazz4843/whisper-rs) / [transcribe-rs](https://crates.io/crates/transcribe-rs) — Whisper + Parakeet inference

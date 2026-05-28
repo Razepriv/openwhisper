@@ -1,0 +1,58 @@
+name: "Landing"
+
+# Auto-deploys the static marketing page at `landing/` to GitHub Pages
+# on every push to `main` that touches it. Live URL once enabled:
+#   https://<owner>.github.io/<repo>/
+# (For Razepriv/openwhisper: https://razepriv.github.io/openwhisper/)
+#
+# First-time setup (one-off, in the repo's GitHub UI):
+#   Settings → Pages → Source = "GitHub Actions" → Save.
+# Without that toggle the workflow runs but the deploy step fails with
+# "Pages not enabled for this repository".
+#
+# Manual re-deploy: Actions tab → "Landing" → Run workflow.
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "landing/**"
+      - ".github/workflows/landing.yml"
+  workflow_dispatch:
+
+# Concurrency: only one Pages deploy at a time. New pushes cancel
+# stale in-flight runs so the live URL always matches the latest
+# green commit, not whichever workflow happened to finish last.
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deploy.outputs.page_url }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure Pages
+        uses: actions/configure-pages@v5
+
+      - name: Upload landing/ as Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          # We ship only the landing folder, not the whole repo —
+          # keeps the URL small and avoids leaking unrelated files
+          # (release notes, research docs, etc.) at /research/, etc.
+          path: ./landing
+
+      - name: Deploy to GitHub Pages
+        id: deploy
+        uses: actions/deploy-pages@v4
