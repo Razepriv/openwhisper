@@ -210,9 +210,7 @@ const RecordingOverlay: React.FC = () => {
           <div className="transcribing-text">
             {t("overlay.transcribing")}
             {elapsedSec > 0 && (
-              <span style={{ marginLeft: 6, opacity: 0.7 }}>
-                {elapsedSec}s
-              </span>
+              <span style={{ marginLeft: 6, opacity: 0.7 }}>{elapsedSec}s</span>
             )}
           </div>
         )}
@@ -220,9 +218,7 @@ const RecordingOverlay: React.FC = () => {
           <div className="transcribing-text">
             {t("overlay.processing")}
             {elapsedSec > 0 && (
-              <span style={{ marginLeft: 6, opacity: 0.7 }}>
-                {elapsedSec}s
-              </span>
+              <span style={{ marginLeft: 6, opacity: 0.7 }}>{elapsedSec}s</span>
             )}
           </div>
         )}

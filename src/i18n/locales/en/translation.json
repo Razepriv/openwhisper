@@ -490,8 +490,11 @@
         },
         "gpuDevice": {
           "title": "GPU Device",
-          "description": "Select which GPU to use for Whisper inference. Auto picks the dedicated GPU.",
-          "auto": "Auto"
+          "description": "Select which GPU to use for Whisper inference. Auto picks the dedicated GPU when one is available — on a dual-GPU laptop this avoids the slower integrated iGPU automatically.",
+          "auto": "Auto",
+          "autoDedicated": "Auto (Dedicated GPU)",
+          "dedicated": "Dedicated",
+          "integrated": "Integrated"
         }
       },
       "startHidden": {

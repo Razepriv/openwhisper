@@ -181,10 +181,7 @@ export const VibeCodingSettings: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-px bg-border">
           <SupportedAppRow
             icon={<Code size={14} />}
-            name={t(
-              "settings.vibeCoding.supported.ides",
-              "IDEs (graphical)",
-            )}
+            name={t("settings.vibeCoding.supported.ides", "IDEs (graphical)")}
             apps="Cursor, VS Code, Windsurf, JetBrains (IntelliJ / PyCharm / WebStorm / GoLand / Rider / RustRover / PhpStorm)"
             features={[
               t(
@@ -219,7 +216,10 @@ export const VibeCodingSettings: React.FC = () => {
       </SettingsGroup>
 
       <SettingsGroup
-        title={t("settings.vibeCoding.promptOptimizer.title", "Prompt optimizer")}
+        title={t(
+          "settings.vibeCoding.promptOptimizer.title",
+          "Prompt optimizer",
+        )}
         description={t(
           "settings.vibeCoding.promptOptimizer.subtitle",
           "Bind a hotkey to rewrite the last dictation as a high-quality LLM prompt. Already shipped as the default 'Prompt Engineer' transform — configure under Transforms.",

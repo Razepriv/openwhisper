@@ -789,6 +789,12 @@ pub struct GpuDeviceOption {
     pub id: i32,
     pub name: String,
     pub total_vram_mb: usize,
+    /// `"dedicated"` for discrete cards (NVIDIA / AMD GPUs with their own
+    /// VRAM), `"integrated"` for iGPUs that share system RAM. Surfaced so
+    /// the frontend can sort dedicated GPUs first and tag the dedicated
+    /// one as "Recommended" — Wispr-parity behaviour for laptops where
+    /// the integrated GPU shows up first in raw enumeration order.
+    pub kind: String,
 }
 
 static GPU_DEVICES: OnceLock<Vec<GpuDeviceOption>> = OnceLock::new();
@@ -807,12 +813,17 @@ fn cached_gpu_devices() -> &'static [GpuDeviceOption] {
             return Vec::new();
         }
 
+        use transcribe_rs::whisper_cpp::gpu::GpuKind;
         list_gpu_devices()
             .into_iter()
             .map(|d| GpuDeviceOption {
                 id: d.id,
                 name: d.name,
                 total_vram_mb: d.total_vram / (1024 * 1024),
+                kind: match d.kind {
+                    GpuKind::Dedicated => "dedicated".to_string(),
+                    GpuKind::Integrated => "integrated".to_string(),
+                },
             })
             .collect()
     })

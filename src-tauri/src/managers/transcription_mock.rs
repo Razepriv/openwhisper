@@ -70,6 +70,7 @@ pub struct GpuDeviceOption {
     pub id: i32,
     pub name: String,
     pub total_vram_mb: usize,
+    pub kind: String,
 }
 
 #[derive(Serialize, Clone, Debug, Type)]

@@ -62,22 +62,54 @@ export const AccelerationSelector: FC<AccelerationSelectorProps> = ({
 
   useEffect(() => {
     commands.getAvailableAccelerators().then((available) => {
-      // Build combined Whisper options: Auto, [GPU devices...], CPU
+      // Build combined Whisper options: Auto, [GPU devices, dedicated first], CPU.
+      //
+      // Sort order: dedicated GPUs first (descending VRAM), integrated GPUs after.
+      // Reason: ggml enumerates Vulkan devices in driver-reported order, which on
+      // most laptops puts the integrated iGPU at index 0 even when a discrete
+      // dGPU is present. Showing the dedicated GPU first matches Wispr Flow's
+      // behaviour and makes the "right" choice the first one the user sees.
+      const devices = [...(available.gpu_devices ?? [])].sort((a, b) => {
+        const kindRank = (k?: string) => (k === "dedicated" ? 0 : 1);
+        const byKind = kindRank(a.kind) - kindRank(b.kind);
+        if (byKind !== 0) return byKind;
+        return (b.total_vram_mb ?? 0) - (a.total_vram_mb ?? 0);
+      });
+
+      const hasDedicated = devices.some((d) => d.kind === "dedicated");
+
       const opts: DropdownOption[] = [
         {
           value: "auto",
-          label: t("settings.advanced.acceleration.gpuDevice.auto"),
+          // When a dedicated GPU is present, make it clear in the label that
+          // Auto will pick it. When only integrated/CPU is available, keep
+          // the plain "Auto" label.
+          label: hasDedicated
+            ? t(
+                "settings.advanced.acceleration.gpuDevice.autoDedicated",
+                "Auto (Dedicated GPU)",
+              )
+            : t("settings.advanced.acceleration.gpuDevice.auto"),
         },
       ];
 
-      for (const dev of available.gpu_devices) {
+      for (const dev of devices) {
         const vramLabel =
           dev.total_vram_mb >= 1024
             ? `${(dev.total_vram_mb / 1024).toFixed(1)} GB`
             : `${dev.total_vram_mb} MB`;
+        // Append (Dedicated) / (Integrated) tag so multi-GPU users can tell
+        // them apart even when both have similar names (some AMD laptops show
+        // "AMD Radeon" for both the iGPU and the dGPU).
+        const kindTag =
+          dev.kind === "dedicated"
+            ? ` — ${t("settings.advanced.acceleration.gpuDevice.dedicated", "Dedicated")}`
+            : dev.kind === "integrated"
+              ? ` — ${t("settings.advanced.acceleration.gpuDevice.integrated", "Integrated")}`
+              : "";
         opts.push({
           value: `gpu:${dev.id}`,
-          label: `${dev.name} (${vramLabel})`,
+          label: `${dev.name} (${vramLabel})${kindTag}`,
         });
       }
 
