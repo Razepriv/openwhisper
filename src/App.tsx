@@ -305,10 +305,10 @@ function App() {
   // white screen). The check is timed out at 6s so this state is never
   // permanent.
   if (onboardingStep === null) {
-    // Phase Final.Web diagnostic: bright, theme-independent colors so
-    // we can't mistake this state for a blank/broken render. If user
-    // sees ORANGE, React is mounted and onboardingStep just hasn't
-    // resolved yet (6s timeout, then falls to "accessibility").
+    // Normal loading state. Uses inline-styled neutral background so it
+    // works regardless of the user's OS theme (Tailwind theme tokens
+    // resolve to near-white in light mode, which can look like a
+    // "blank" screen on first launch).
     return (
       <div
         style={{
@@ -318,16 +318,15 @@ function App() {
           alignItems: "center",
           justifyContent: "center",
           gap: "12px",
-          background: "#ff7a00",
-          color: "#000",
+          background: "#1c1b1a",
+          color: "#e8e8e8",
           fontFamily: "Segoe UI, system-ui, sans-serif",
         }}
       >
         {/* eslint-disable-next-line i18next/no-literal-string */}
-        <div style={{ fontSize: "20px", fontWeight: 700 }}>OpenWhisper</div>
-        {/* eslint-disable-next-line i18next/no-literal-string */}
-        <div style={{ fontSize: "14px", opacity: 0.8 }}>
-          Loading… (React mounted, waiting for backend)
+        <div style={{ fontSize: "18px", fontWeight: 600 }}>OpenWhisper</div>
+        <div style={{ fontSize: "13px", opacity: 0.7 }}>
+          {t("common.loading", "Loading…")}
         </div>
       </div>
     );

@@ -8,22 +8,25 @@
 
   <body>
     <!--
-      Diagnostic chrome: a visible "OpenWhisper booting…" splash that the
-      WebView renders even before the React bundle finishes parsing.
-      Plus a global error sink so any synchronous module-load error
-      writes itself ON THE PAGE instead of disappearing into the
-      release-build void. Both elements are removed by main.tsx once
-      React.createRoot succeeds — see main.tsx for the cleanup.
+      Minimal boot splash + global error sink. Splash is removed by main.tsx
+      once React.createRoot succeeds. The error sink stays armed for the
+      lifetime of the page — if a runtime JS error fires later, we paint it
+      into #boot-error rather than letting the page silently break.
+
+      Phase Final.Web kept this after the white-screen debugging session:
+      the diagnostic flow (visible status during boot + visible errors when
+      something goes wrong) is genuinely useful for end-users running an
+      unsigned binary they downloaded off the web.
     -->
-    <div id="boot-splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#0044ff;color:#fff;font-family:Segoe UI,system-ui,sans-serif;gap:12px;z-index:2147483647;pointer-events:none">
+    <div id="boot-splash" style="position:fixed;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;background:#1c1b1a;color:#e8e8e8;font-family:Segoe UI,system-ui,sans-serif;gap:12px;z-index:2147483647;pointer-events:none">
       <div style="font-size:18px;font-weight:600">OpenWhisper</div>
-      <div id="boot-status" style="font-size:13px;opacity:0.75">Loading…</div>
-      <div id="boot-error" style="display:none;max-width:560px;padding:12px 16px;margin-top:16px;border:1px solid #b00;background:#330000;color:#fdd;font-family:Consolas,monospace;font-size:12px;white-space:pre-wrap;overflow:auto;max-height:70vh"></div>
+      <div id="boot-status" style="font-size:13px;opacity:0.7">Loading…</div>
+      <div id="boot-error" style="display:none;max-width:560px;padding:12px 16px;margin-top:16px;border:1px solid #b00;background:#330000;color:#fdd;font-family:Consolas,monospace;font-size:12px;white-space:pre-wrap;overflow:auto;max-height:70vh;pointer-events:auto"></div>
     </div>
     <script>
-      // Capture synchronous errors during module load and paint them
-      // into #boot-error so the user (and us) can see why React never
-      // mounted. Runs BEFORE the module script tag below.
+      // Global error sink: paints any uncaught JS error into #boot-error so
+      // users running release builds without devtools can still see what
+      // went wrong. Runs BEFORE the React bundle loads.
       (function () {
         function show(msg) {
           var el = document.getElementById("boot-error");
@@ -32,6 +35,14 @@
           el.textContent = (el.textContent || "") + msg + "\n";
           var status = document.getElementById("boot-status");
           if (status) status.textContent = "Failed to start — see error below";
+          // If the splash was already removed, re-anchor the error chrome.
+          if (!document.getElementById("boot-splash")) {
+            document.body.appendChild(el);
+            el.style.position = "fixed";
+            el.style.right = "12px";
+            el.style.bottom = "12px";
+            el.style.zIndex = "2147483647";
+          }
         }
         window.addEventListener("error", function (e) {
           show(
@@ -43,9 +54,8 @@
         window.addEventListener("unhandledrejection", function (e) {
           show("Unhandled promise rejection: " + (e.reason && e.reason.stack || e.reason || "(unknown)"));
         });
-        // Set status as a heartbeat so we know the inline script ran.
         var s = document.getElementById("boot-status");
-        if (s) s.textContent = "HTML loaded — waiting for React bundle…";
+        if (s) s.textContent = "HTML loaded — booting React…";
       })();
     </script>
     <div id="root"></div>

@@ -23,22 +23,11 @@ function showBootError(msg: string): void {
 }
 
 function removeBootSplash(): void {
-  // Phase Final.Web extreme-diagnostic mode: the user is still seeing
-  // white after every prior fix. To prove the HTML→JS→React path:
-  // - The splash stays FULL-SCREEN and BRIGHT BLUE forever
-  // - On React mount we paint a small GREEN ribbon at the top labeled
-  //   "React mounted at <time>"
-  // If the user sees blue + green ribbon → HTML + JS + React all work
-  // and the React app is rendering, the issue is App.tsx returning
-  // null / invisible content. If they see only BLUE → HTML loads but
-  // React mount failed. If they see PURE WHITE → HTML never loaded.
-  const splash = document.getElementById("boot-splash");
-  if (!splash) return;
-  const ribbon = document.createElement("div");
-  ribbon.style.cssText =
-    "position:fixed;top:0;left:0;right:0;background:#0c5;color:#000;font-family:Segoe UI,system-ui,sans-serif;font-size:13px;font-weight:600;padding:6px 12px;z-index:2147483647;pointer-events:none;text-align:center";
-  ribbon.textContent = "React mounted at " + new Date().toLocaleTimeString();
-  document.body.appendChild(ribbon);
+  // Remove the boot splash now that React has taken over rendering.
+  // The error sink wired up in index.html stays armed regardless —
+  // any later runtime error still surfaces via the global event
+  // listeners painting into a re-anchored #boot-error box.
+  document.getElementById("boot-splash")?.remove();
 }
 
 try {
