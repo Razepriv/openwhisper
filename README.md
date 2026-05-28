@@ -1,4 +1,4 @@
-# handy
+# OpenVoice
 
 **100% local, 100% free, Wispr-Flow-class voice dictation for Mac, Windows, and Linux.**
 
@@ -6,7 +6,7 @@ Hold a hotkey anywhere on your computer, speak naturally, and clean formatted te
 
 > **Landing page** → [handy.apexaios.io](https://handy.apexaios.io) · **Download v0.2.0** → [Releases](https://github.com/Razepriv/openwhisper/releases/latest)
 >
-> *The repository is still named `openwhisper` (the original project codename); the product name is `handy`.*
+> *The repository is still named `openwhisper` (the original project codename); the product name is `OpenVoice`.*
 
 ## Download
 
@@ -14,20 +14,20 @@ Grab the latest installer for your OS from the [**Releases page**](https://githu
 
 | OS                        | Asset                                                                    | What you'll see on first launch                                                          |
 | ------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
-| **Windows 10/11 (x64)**   | `handy_0.2.0_x64-setup.exe` or `handy_0.2.0_x64_en-US.msi`               | SmartScreen warning → "More info" → "Run anyway". (We don't ship a code-signing cert.)   |
-| **Windows 11 (ARM64)**    | `handy_0.2.0_arm64-setup.exe` or `handy_0.2.0_arm64_en-US.msi`           | Same SmartScreen flow.                                                                   |
-| **macOS (Apple Silicon)** | `handy_0.2.0_aarch64.dmg`                                                | Gatekeeper warning → System Settings → Privacy & Security → "Open Anyway".               |
-| **macOS (Intel)**         | `handy_0.2.0_x64.dmg`                                                    | Same Gatekeeper flow.                                                                    |
-| **Linux (x86_64)**        | `handy_0.2.0_amd64.deb` / `handy-0.2.0-1.x86_64.rpm` / `.AppImage`       | `sudo dpkg -i handy_0.2.0_amd64.deb`, `sudo dnf install`, or `chmod +x ./*.AppImage`.    |
-| **Linux (arm64)**         | `handy_0.2.0_arm64.deb` / `handy-0.2.0-1.aarch64.rpm` / `.AppImage`      | Same.                                                                                    |
+| **Windows 10/11 (x64)**   | `OpenVoice_0.2.0_x64-setup.exe` or `OpenVoice_0.2.0_x64_en-US.msi`               | SmartScreen warning → "More info" → "Run anyway". (We don't ship a code-signing cert.)   |
+| **Windows 11 (ARM64)**    | `OpenVoice_0.2.0_arm64-setup.exe` or `OpenVoice_0.2.0_arm64_en-US.msi`           | Same SmartScreen flow.                                                                   |
+| **macOS (Apple Silicon)** | `OpenVoice_0.2.0_aarch64.dmg`                                                | Gatekeeper warning → System Settings → Privacy & Security → "Open Anyway".               |
+| **macOS (Intel)**         | `OpenVoice_0.2.0_x64.dmg`                                                    | Same Gatekeeper flow.                                                                    |
+| **Linux (x86_64)**        | `OpenVoice_0.2.0_amd64.deb` / `OpenVoice-0.2.0-1.x86_64.rpm` / `.AppImage`       | `sudo dpkg -i OpenVoice_0.2.0_amd64.deb`, `sudo dnf install`, or `chmod +x ./*.AppImage`.    |
+| **Linux (arm64)**         | `OpenVoice_0.2.0_arm64.deb` / `OpenVoice-0.2.0-1.aarch64.rpm` / `.AppImage`      | Same.                                                                                    |
 
-handy ships **unsigned by design** — we don't pay $99/yr to Apple or $300+/yr to a Windows EV cert authority just so you can run a local-only tool. The one-time "this app is unsigned" warning is a normal part of installing open-source software outside the App Store / Microsoft Store. After the first launch the OS remembers your choice.
+OpenVoice ships **unsigned by design** — we don't pay $99/yr to Apple or $300+/yr to a Windows EV cert authority just so you can run a local-only tool. The one-time "this app is unsigned" warning is a normal part of installing open-source software outside the App Store / Microsoft Store. After the first launch the OS remembers your choice.
 
-**Where to look for updates:** handy has a built-in auto-updater that pulls from the same Releases page. Toggle it in Settings → About → "Check for updates".
+**Where to look for updates:** OpenVoice has a built-in auto-updater that pulls from the same Releases page. Toggle it in Settings → About → "Check for updates".
 
 ## Privacy guarantee
 
-handy performs **all** transcription and AI cleanup on your own machine:
+OpenVoice performs **all** transcription and AI cleanup on your own machine:
 
 - **Speech recognition (Whisper / Parakeet / Moonshine)** — runs locally via `whisper.cpp` / `transcribe-rs`. The audio never hits the network.
 - **AI cleanup (the LLM pass)** — runs locally via one of:
@@ -35,10 +35,10 @@ handy performs **all** transcription and AI cleanup on your own machine:
   - Phi Silica via Windows AI APIs (Windows 11 24H2+ on Copilot+ PCs) — OS-provided, on-device
   - Bundled `llama.cpp` sidecar with Gemma 3 / Phi-4 mini / Llama 3.2 weights — runs on `127.0.0.1`
   - Optional Ollama (if you've already installed it) — runs on `127.0.0.1`
-- **No cloud LLM providers ship with handy.** The Handy upstream's OpenAI / Anthropic / Groq / Cerebras / Z.AI / OpenRouter / Bedrock-Mantle integrations were **removed** in Phase 1.10. Existing settings files that reference them are automatically migrated to local defaults on first launch.
+- **No cloud LLM providers ship with OpenVoice.** The Handy upstream's OpenAI / Anthropic / Groq / Cerebras / Z.AI / OpenRouter / Bedrock-Mantle integrations were **removed** in Phase 1.10. Existing settings files that reference them are automatically migrated to local defaults on first launch.
 - **Hard-coded URL whitelist.** The LLM client (`src-tauri/src/llm_client.rs::validate_local_url`) rejects any base URL that is not `127.0.0.1`, `::1`, `localhost`, `apple-intelligence://`, or `phi-silica://`. A bug in settings cannot leak transcripts off the machine — the network call itself is blocked.
 
-The only network access handy makes is for:
+The only network access OpenVoice makes is for:
 1. Downloading model weights from Hugging Face on first run (one-time, no user data sent).
 2. Checking for app updates (opt-out in Settings).
 
@@ -46,11 +46,11 @@ If you want a fully air-gapped install, pre-place the Whisper + GGUF model files
 
 > **Status:** v0.2.0 — first public release. Forked from [Handy](https://github.com/cjpais/Handy) (MIT) on 2026-05-24. See [release notes](./.github/RELEASE_NOTES_v0.2.0.md) for the full feature list shipped in this build.
 
-## Why handy
+## Why OpenVoice
 
 [Wispr Flow](https://wisprflow.ai) is the polished commercial voice-dictation app loved by founders, devs, lawyers, and creators. It costs $12–15/month and **transmits every word you speak to its servers**. There is no offline mode.
 
-handy delivers the same UX with one fundamental difference: **everything runs locally on your machine**. Speech recognition (Whisper), AI cleanup (Gemma / Phi / Apple Foundation Models / Phi Silica), dictionary biasing — all on-device.
+OpenVoice delivers the same UX with one fundamental difference: **everything runs locally on your machine**. Speech recognition (Whisper), AI cleanup (Gemma / Phi / Apple Foundation Models / Phi Silica), dictionary biasing — all on-device.
 
 ## Key features (shipped in v0.2.0)
 
@@ -72,7 +72,7 @@ handy delivers the same UX with one fundamental difference: **everything runs lo
 
 ## Built on the shoulders of giants
 
-handy is a fork of [Handy](https://github.com/cjpais/Handy) (MIT, 22k stars). Massive credit to CJ Pais and the Handy contributors — without their work, this project would not exist. handy extends Handy with a Wispr-Flow-class feature set targeted at productivity workers.
+OpenVoice is a fork of [Handy](https://github.com/cjpais/Handy) (MIT, 22k stars). Massive credit to CJ Pais and the Handy contributors — without their work, this project would not exist. OpenVoice extends Handy with a Wispr-Flow-class feature set targeted at productivity workers.
 
 Core libraries:
 - [whisper-rs](https://github.com/tazz4843/whisper-rs) / [transcribe-rs](https://crates.io/crates/transcribe-rs) — Whisper + Parakeet inference

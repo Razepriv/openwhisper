@@ -331,7 +331,7 @@ function App() {
             letterSpacing: "-0.01em",
           }}
         >
-          handy
+          OpenVoice
         </div>
         <div style={{ fontSize: "13px", opacity: 0.7 }}>
           {t("common.loading", "Loading…")}

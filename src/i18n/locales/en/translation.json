@@ -80,7 +80,7 @@
     },
     "firstDictation": {
       "title": "Three ways to dictate",
-      "description": "handy has three entry points — pick whichever fits your flow.",
+      "description": "OpenVoice has three entry points — pick whichever fits your flow.",
       "continueButton": "I'm ready",
       "stepLabel": "Step {{step}}",
       "cards": {
@@ -94,7 +94,7 @@
         },
         "commandMode": {
           "title": "Highlight & rewrite",
-          "body": "Highlight any text, hold {{hotkey}}, and speak an instruction like \"make this more polite\" — handy rewrites the selection in place."
+          "body": "Highlight any text, hold {{hotkey}}, and speak an instruction like \"make this more polite\" — OpenVoice rewrites the selection in place."
         }
       }
     },
@@ -174,7 +174,7 @@
     },
     "permissions": {
       "title": "Permissions Required",
-      "description": "Handy needs a couple of permissions to work properly.",
+      "description": "OpenVoice needs a couple of permissions to work properly.",
       "microphone": {
         "title": "Microphone Access",
         "description": "Required to hear your voice for transcription."
@@ -291,7 +291,7 @@
     },
     "vibeCoding": {
       "title": "Vibe Coding",
-      "description": "IDE-aware dictation rewrites — file-tagging in IDEs and coding-agent terminals, identifier backtick-wrapping in IDEs only. Runs only when handy detects the focused app is one of the supported coding contexts.",
+      "description": "IDE-aware dictation rewrites — file-tagging in IDEs and coding-agent terminals, identifier backtick-wrapping in IDEs only. Runs only when OpenVoice detects the focused app is one of the supported coding contexts.",
       "toggle": {
         "label": "Enable Vibe Coding",
         "description": "When off, transcription pastes verbatim regardless of focused app."
@@ -305,7 +305,7 @@
       },
       "supported": {
         "title": "Supported apps",
-        "subtitle": "handy recognises these by their process name or window title. Add a request on GitHub if your editor is missing.",
+        "subtitle": "OpenVoice recognises these by their process name or window title. Add a request on GitHub if your editor is missing.",
         "ides": "IDEs (graphical)",
         "agents": "Coding agents in terminals"
       },
@@ -381,7 +381,7 @@
     "general": {
       "title": "General",
       "shortcut": {
-        "title": "Handy Shortcuts",
+        "title": "OpenVoice Shortcuts",
         "description": "Configure keyboard shortcuts to trigger speech-to-text recording",
         "loading": "Loading shortcuts...",
         "none": "No shortcuts configured",
@@ -503,11 +503,11 @@
       },
       "autostart": {
         "label": "Launch on Startup",
-        "description": "Automatically start Handy when you log in to your computer."
+        "description": "Automatically start OpenVoice when you log in to your computer."
       },
       "showTrayIcon": {
         "label": "Show Tray Icon",
-        "description": "Display the Handy icon in the system tray."
+        "description": "Display the OpenVoice icon in the system tray."
       },
       "overlay": {
         "title": "Overlay Position",
@@ -689,7 +689,7 @@
       },
       "updateChecks": {
         "label": "Check for Updates",
-        "description": "Automatically check for new versions of Handy"
+        "description": "Automatically check for new versions of OpenVoice"
       },
       "soundTheme": {
         "label": "Sound Theme",
@@ -757,11 +757,11 @@
       "title": "About",
       "version": {
         "title": "Version",
-        "description": "Current version of Handy"
+        "description": "Current version of OpenVoice"
       },
       "appDataDirectory": {
         "title": "App Data Directory",
-        "description": "Location where Handy stores its data"
+        "description": "Location where OpenVoice stores its data"
       },
       "sourceCode": {
         "title": "Source Code",
@@ -770,7 +770,7 @@
       },
       "supportDevelopment": {
         "title": "Support Development",
-        "description": "Help us continue building Handy",
+        "description": "Help us continue building OpenVoice",
         "button": "Donate"
       },
       "acknowledgments": {
@@ -778,7 +778,7 @@
         "whisper": {
           "title": "Whisper.cpp",
           "description": "High-performance inference of OpenAI's Whisper automatic speech recognition model",
-          "details": "Handy uses Whisper.cpp for fast, local speech-to-text processing. Thanks to the amazing work by Georgi Gerganov and contributors."
+          "details": "OpenVoice uses Whisper.cpp for fast, local speech-to-text processing. Thanks to the amazing work by Georgi Gerganov and contributors."
         }
       }
     }
@@ -824,7 +824,7 @@
   },
   "accessibility": {
     "permissionsRequired": "Accessibility Permissions Required",
-    "permissionsDescription": "Handy needs accessibility permissions to type transcribed text.",
+    "permissionsDescription": "OpenVoice needs accessibility permissions to type transcribed text.",
     "openSettings": "Open System Settings",
     "dismiss": "Dismiss"
   },
@@ -847,7 +847,7 @@
   },
   "appLanguage": {
     "title": "Application Language",
-    "description": "Change the language of the Handy interface"
+    "description": "Change the language of the OpenVoice interface"
   },
   "overlay": {
     "transcribing": "Transcribing...",

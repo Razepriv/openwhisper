@@ -1,6 +1,6 @@
-# handy — landing page
+# OpenVoice — landing page
 
-Static marketing page for handy. Plain HTML/CSS/JS, no build step.
+Static marketing page for OpenVoice. Plain HTML/CSS/JS, no build step.
 
 **Live at** → [handy.apexaios.io](https://handy.apexaios.io)
 
@@ -36,7 +36,7 @@ mirrors or to fork the deploy:
 
 ### Vercel (production)
 
-Vercel project: `razeprivs-projects/handy-landing`. Two ways to ship a
+Vercel project: `razeprivs-projects/openvoice-landing`. Two ways to ship a
 new version:
 
 ```bash
@@ -56,7 +56,7 @@ cd landing && bunx vercel --prod
 
 The `.vercel/` folder (project ID + auth) is gitignored — anyone
 running `vercel link` from this folder gets prompted to link to the
-existing `handy-landing` project.
+existing `openvoice-landing` project.
 
 ### GitHub Pages (alternate / mirror)
 
@@ -90,7 +90,7 @@ Tokens mirror the app's editorial palette (see `../src/App.css`):
 When releasing a new version, update these strings:
 
 - `index.html` → `eyebrow` ("v0.2.0 — first public release")
-- `index.html` → download card file names (`handy_0.2.0_*`)
+- `index.html` → download card file names (`OpenVoice_0.2.0_*`)
 - `index.html` → `Download v0.2.0` section heading + CTA button
 - Asset URLs are version-agnostic — they all point to `/releases/latest`.
 
