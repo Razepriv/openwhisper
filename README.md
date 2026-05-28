@@ -4,7 +4,7 @@
 
 Hold a hotkey anywhere on your computer, speak naturally, and clean formatted text is pasted at your cursor. Your voice never leaves your machine. Zero subscription. Zero telemetry. **Zero cloud, zero API.**
 
-> **Landing page** → [handy-landing-gamma.vercel.app](https://handy-landing-gamma.vercel.app) · **Download v0.2.0** → [Releases](https://github.com/Razepriv/openwhisper/releases/latest)
+> **Landing page** → [handy.apexaios.io](https://handy.apexaios.io) · **Download v0.2.0** → [Releases](https://github.com/Razepriv/openwhisper/releases/latest)
 >
 > *The repository is still named `openwhisper` (the original project codename); the product name is `handy`.*
 

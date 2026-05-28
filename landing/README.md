@@ -2,7 +2,7 @@
 
 Static marketing page for handy. Plain HTML/CSS/JS, no build step.
 
-**Live at** → [handy-landing-gamma.vercel.app](https://handy-landing-gamma.vercel.app)
+**Live at** → [handy.apexaios.io](https://handy.apexaios.io)
 
 ## What's here
 
