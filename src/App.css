@@ -1,30 +1,107 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+ * handy — editorial design tokens (Phase Final.UI)
+ *
+ * The previous Handy palette leaned heavily on a single pink accent
+ * (`#faa2ca`) and used it as both the "primary" colour and a background
+ * fill in many places. The redesign moves to a quieter, editorial palette:
+ *
+ *  - **Neutral base** — warm-tinted grays (zinc-ish) instead of the prior
+ *    pure white. Reduces eye strain on long settings pages, reads more
+ *    like a magazine/design tool.
+ *  - **Single restrained accent** — violet (`#7c3aed` light / `#a78bfa`
+ *    dark). Used ONLY for active selection state, focused inputs, and the
+ *    primary brand mark. Everywhere else we rely on borders + spacing for
+ *    structure.
+ *  - **Elevation via borders, not fills** — cards are bordered with a
+ *    subtle hairline rather than tinted backgrounds. Matches Linear /
+ *    Vercel / Stripe-style aesthetics.
+ *  - **Manual theme switching** — `<html data-theme="light|dark">` set by
+ *    React from the persisted user preference. We override the OS-level
+ *    `prefers-color-scheme` so the toggle is the source of truth.
+ * ----------------------------------------------------------------------- */
+
 @theme {
-  /* Design tokens */
-  --color-text: #0f0f0f;
-  --color-background: #fbfbfb;
-  --color-background-ui: #da5893;
-  --color-logo-primary: #faa2ca;
-  --color-logo-stroke: #382731;
+  /* Type — Inter for an editorial sans, system fallbacks for offline */
+  --font-sans: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-display: "Inter", "Segoe UI", system-ui, -apple-system, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", Consolas, monospace;
+
+  /* DEFAULT (light) — overridden by [data-theme="dark"] below */
+  --color-text: #18181b;          /* zinc-900 */
+  --color-text-muted: #52525b;    /* zinc-600 */
+  --color-mid-gray: #71717a;      /* zinc-500 — kept for legacy class refs */
+  --color-background: #fafaf9;    /* stone-50 — warm off-white */
+  --color-background-elevated: #ffffff;
+  --color-background-ui: #f4f4f5; /* zinc-100 — chip / inline highlight */
+  --color-border: #e4e4e7;        /* zinc-200 — hairline dividers */
+  --color-border-strong: #d4d4d8; /* zinc-300 */
+
+  /* Accent — single violet, used sparingly */
+  --color-accent: #7c3aed;        /* violet-600 */
+  --color-accent-hover: #6d28d9;  /* violet-700 */
+  --color-accent-fg: #ffffff;     /* contrast on accent fill */
+  --color-accent-soft: #ede9fe;   /* violet-100 — subtle active-state bg */
+
+  /* Brand — used by the logo SVG */
+  --color-logo-primary: #7c3aed;  /* violet-600 */
+  --color-logo-stroke: #1e1b4b;   /* indigo-950 */
   --color-text-stroke: #f6f6f6;
-  --color-mid-gray: #808080;
+}
+
+/* Dark theme — applied when <html data-theme="dark"> is set OR the user
+ * has no preference and the OS is in dark mode (see :root @media block
+ * further down). The data-theme attribute always wins. */
+[data-theme="dark"] {
+  --color-text: #fafafa;          /* zinc-50 */
+  --color-text-muted: #a1a1aa;    /* zinc-400 */
+  --color-mid-gray: #a1a1aa;
+  --color-background: #0a0a0a;    /* near-black */
+  --color-background-elevated: #18181b; /* zinc-900 */
+  --color-background-ui: #27272a; /* zinc-800 */
+  --color-border: #27272a;        /* zinc-800 */
+  --color-border-strong: #3f3f46; /* zinc-700 */
+
+  --color-accent: #a78bfa;        /* violet-400 — better contrast on dark */
+  --color-accent-hover: #c4b5fd;  /* violet-300 */
+  --color-accent-fg: #0a0a0a;
+  --color-accent-soft: #2e1065;   /* violet-950 */
+
+  --color-logo-primary: #a78bfa;  /* violet-400 */
+  --color-logo-stroke: #ede9fe;   /* violet-100 */
+}
+
+/* OS-level dark mode is only honored when the user hasn't set an explicit
+ * preference (no data-theme attribute on <html>). React owns this; see
+ * `applyTheme` in main.tsx. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme]) {
+    --color-text: #fafafa;
+    --color-text-muted: #a1a1aa;
+    --color-mid-gray: #a1a1aa;
+    --color-background: #0a0a0a;
+    --color-background-elevated: #18181b;
+    --color-background-ui: #27272a;
+    --color-border: #27272a;
+    --color-border-strong: #3f3f46;
+    --color-accent: #a78bfa;
+    --color-accent-hover: #c4b5fd;
+    --color-accent-fg: #0a0a0a;
+    --color-accent-soft: #2e1065;
+    --color-logo-primary: #a78bfa;
+    --color-logo-stroke: #ede9fe;
+  }
 }
 
 :root {
-  /* Typography */
-  font-size: 15px;
-  line-height: 24px;
+  /* Typography — tighter line-height for editorial density */
+  font-family: var(--font-sans);
+  font-size: 14px;
+  line-height: 1.5;
   font-weight: 400;
+  letter-spacing: -0.005em; /* slight optical tightening at this size */
 
-  /* Colors - Light Theme */
-  /* --color-text: #0f0f0f;
-  --color-background: #fbfbfb;
-  --color-logo-primary: #FAA2CA;
-  --color-logo-stroke: #382731;
-  --color-text-stroke: #f6f6f6; */
-
-  /* Typography settings */
   font-synthesis: none;
   text-rendering: optimizeLegibility;
   -webkit-font-smoothing: antialiased;
@@ -38,9 +115,17 @@
     transparent 70%
   );
 
-  /* Apply colors */
   color: var(--color-text);
   background-color: var(--color-background);
+}
+
+/* Editorial heading scale — slightly tighter and bolder than browser
+ * defaults so screens read like a polished CMS, not a wireframe. */
+h1, h2, h3, h4, h5, h6 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  color: var(--color-text);
 }
 
 .container {
@@ -52,25 +137,15 @@
   text-align: center;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    /* Colors - Dark Theme */
-    --color-text: #fbfbfb;
-    --color-background: #2c2b29;
-    --color-logo-primary: #f28cbb;
-    --color-logo-stroke: #fad1ed;
-  }
-}
-
-/* macOS - tint native overlay scrollbar thumb */
+/* macOS — let the OS draw its native overlay scrollbar but tint the thumb */
 :root[data-platform="macos"] {
   scrollbar-color: var(--scrollbar-thumb) transparent;
 }
 
-/* Custom Scrollbar - only on Windows/Linux; macOS uses native overlay scrollbars */
+/* Custom scrollbar — only on Windows / Linux. macOS uses native overlays. */
 :root:not([data-platform="macos"]) ::-webkit-scrollbar {
-  width: 14px;
-  height: 14px;
+  width: 12px;
+  height: 12px;
 }
 
 :root:not([data-platform="macos"]) ::-webkit-scrollbar-track {
@@ -79,16 +154,22 @@
 
 :root:not([data-platform="macos"]) ::-webkit-scrollbar-thumb {
   background-color: var(--scrollbar-thumb);
-  border-radius: 20px;
+  border-radius: 999px;
   border: 3px solid transparent;
-  border-right-width: 4px;
-  border-left-width: 3px;
   background-clip: content-box;
   min-height: 32px;
 }
 
 :root:not([data-platform="macos"]) ::-webkit-scrollbar-thumb:hover {
   background-color: var(--scrollbar-thumb-hover);
+}
+
+/* Focus-visible — accent-coloured ring for keyboard users. Replaces the
+ * browser default dotted outline which looked unrefined. */
+:focus-visible {
+  outline: 2px solid var(--color-accent);
+  outline-offset: 2px;
+  border-radius: 4px;
 }
 
 @layer utilities {

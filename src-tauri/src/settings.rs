@@ -192,6 +192,20 @@ pub enum OverlayPosition {
     Bottom,
 }
 
+/// handy Phase Final.UI — user-selected theme override.
+///
+/// `System` (default) follows the OS's `prefers-color-scheme` media query.
+/// `Light` and `Dark` are explicit overrides applied as a
+/// `<html data-theme="...">` attribute by `main.tsx` on every load.
+#[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type, Default)]
+#[serde(rename_all = "lowercase")]
+pub enum ThemePreference {
+    #[default]
+    System,
+    Light,
+    Dark,
+}
+
 #[derive(Serialize, Deserialize, Debug, Clone, Copy, PartialEq, Eq, Type)]
 #[serde(rename_all = "snake_case")]
 pub enum ModelUnloadTimeout {
@@ -509,6 +523,12 @@ pub struct AppSettings {
     #[serde(default)]
     pub style_overrides:
         HashMap<crate::style_presets::AppCategory, crate::style_presets::StylePreset>,
+    /// handy Phase Final.UI — manual theme preference. `System` (default)
+    /// honors the OS's `prefers-color-scheme`; `Light` / `Dark` are
+    /// explicit user overrides applied as `<html data-theme="...">` by
+    /// the React app on every load. Persisted across sessions.
+    #[serde(default)]
+    pub theme: ThemePreference,
     #[serde(default = "default_post_process_provider_id")]
     pub post_process_provider_id: String,
     #[serde(default = "default_post_process_providers")]
@@ -1068,6 +1088,7 @@ pub fn get_default_settings() -> AppSettings {
         snippets: Vec::new(),
         transforms: default_transforms(),
         style_overrides: HashMap::new(),
+        theme: ThemePreference::default(),
         post_process_provider_id: default_post_process_provider_id(),
         post_process_providers: default_post_process_providers(),
         post_process_api_keys: default_post_process_api_keys(),

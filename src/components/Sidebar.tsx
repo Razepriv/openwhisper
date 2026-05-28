@@ -141,34 +141,52 @@ export const Sidebar: React.FC<SidebarProps> = ({
     .map(([id, config]) => ({ id: id as SidebarSection, ...config }));
 
   return (
-    <div className="flex flex-col w-40 h-full border-e border-mid-gray/20 items-center px-2">
-      <HandyTextLogo width={120} className="m-4" />
-      <div className="flex flex-col w-full items-center gap-1 pt-2 border-t border-mid-gray/20">
+    <div className="flex flex-col w-44 h-full border-e border-border bg-background items-stretch px-3 py-4">
+      {/* Brand mark — editorial wordmark + subtle separator below */}
+      <div className="flex items-center justify-start px-2 pb-4 mb-4 border-b border-border">
+        <HandyTextLogo width={70} />
+      </div>
+
+      {/* Nav list — each row is a tight pill with a clean active state.
+          Active = subtle violet-soft background + left-edge accent bar,
+          giving it the "selected article" feel without the heavy fill. */}
+      <nav className="flex flex-col gap-px">
         {availableSections.map((section) => {
           const Icon = section.icon;
           const isActive = activeSection === section.id;
 
           return (
-            <div
+            <button
               key={section.id}
-              className={`flex gap-2 items-center p-2 w-full rounded-lg cursor-pointer transition-colors ${
-                isActive
-                  ? "bg-logo-primary/80"
-                  : "hover:bg-mid-gray/20 hover:opacity-100 opacity-85"
-              }`}
+              type="button"
               onClick={() => onSectionChange(section.id)}
+              className={`group relative flex items-center gap-2.5 px-2.5 py-1.5 rounded-md text-left transition-all
+                ${
+                  isActive
+                    ? "bg-accent-soft text-accent"
+                    : "text-text-muted hover:bg-background-ui hover:text-text"
+                }`}
+              title={t(section.labelKey)}
             >
-              <Icon width={24} height={24} className="shrink-0" />
-              <p
-                className="text-sm font-medium truncate"
-                title={t(section.labelKey)}
-              >
+              {/* Left accent bar — only renders on the active row */}
+              <span
+                aria-hidden
+                className={`absolute left-0 top-1.5 bottom-1.5 w-0.5 rounded-r-full transition-all ${
+                  isActive ? "bg-accent" : "bg-transparent"
+                }`}
+              />
+              <Icon
+                width={16}
+                height={16}
+                className="shrink-0"
+              />
+              <span className="text-[13px] font-medium tracking-tight truncate">
                 {t(section.labelKey)}
-              </p>
-            </div>
+              </span>
+            </button>
           );
         })}
-      </div>
+      </nav>
     </div>
   );
 };

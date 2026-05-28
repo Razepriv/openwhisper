@@ -53,3 +53,12 @@ result
 updater.key*
 .openwhisper/
 
+.shot-*.png
+.tauribuild.log
+.fixbuild.log
+.uirebuild.log
+.rebuild*.log
+.fullrebuild.log
+.build.log
+.app-*.log
+.win-shot.png

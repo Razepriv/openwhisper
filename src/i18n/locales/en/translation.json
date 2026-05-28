@@ -79,7 +79,7 @@
     },
     "firstDictation": {
       "title": "Three ways to dictate",
-      "description": "OpenWhisper has three entry points — pick whichever fits your flow.",
+      "description": "handy has three entry points — pick whichever fits your flow.",
       "continueButton": "I'm ready",
       "stepLabel": "Step {{step}}",
       "cards": {
@@ -93,7 +93,7 @@
         },
         "commandMode": {
           "title": "Highlight & rewrite",
-          "body": "Highlight any text, hold {{hotkey}}, and speak an instruction like \"make this more polite\" — OpenWhisper rewrites the selection in place."
+          "body": "Highlight any text, hold {{hotkey}}, and speak an instruction like \"make this more polite\" — handy rewrites the selection in place."
         }
       }
     },
@@ -480,6 +480,15 @@
           "none": "None",
           "bottom": "Bottom",
           "top": "Top"
+        }
+      },
+      "theme": {
+        "title": "Appearance",
+        "description": "Switch between light and dark themes. 'System' follows your operating system's preference.",
+        "options": {
+          "system": "System",
+          "light": "Light",
+          "dark": "Dark"
         }
       },
       "floatingWidget": {

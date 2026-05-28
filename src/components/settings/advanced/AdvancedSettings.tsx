@@ -24,6 +24,8 @@ import { LazyStreamClose } from "../LazyStreamClose";
 import { FloatingWidget } from "../FloatingWidget";
 // OpenWhisper Phase 1.9 — 4-tier post-dictation cleanup picker.
 import { CleanupLevelPicker } from "../CleanupLevelPicker";
+// handy Phase Final.UI — appearance / theme selector (system / light / dark).
+import { ThemeToggle } from "../ThemeToggle";
 
 export const AdvancedSettings: React.FC = () => {
   const { t } = useTranslation();
@@ -33,6 +35,7 @@ export const AdvancedSettings: React.FC = () => {
   return (
     <div className="max-w-3xl w-full mx-auto space-y-6">
       <SettingsGroup title={t("settings.advanced.groups.app")}>
+        <ThemeToggle descriptionMode="tooltip" grouped={true} />
         <StartHidden descriptionMode="tooltip" grouped={true} />
         <AutostartToggle descriptionMode="tooltip" grouped={true} />
         <ShowTrayIcon descriptionMode="tooltip" grouped={true} />

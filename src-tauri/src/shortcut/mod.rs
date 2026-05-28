@@ -23,7 +23,7 @@ use tauri_plugin_autostart::ManagerExt;
 use crate::settings::APPLE_INTELLIGENCE_DEFAULT_MODEL_ID;
 use crate::settings::{
     self, get_settings, AutoSubmitKey, ClipboardHandling, KeyboardImplementation, LLMPrompt,
-    OverlayPosition, PasteMethod, ShortcutBinding, SoundTheme, TypingTool,
+    OverlayPosition, PasteMethod, ShortcutBinding, SoundTheme, ThemePreference, TypingTool,
     APPLE_INTELLIGENCE_PROVIDER_ID,
 };
 use crate::tray;
@@ -683,6 +683,29 @@ pub fn change_floating_widget_opacity_setting(
     // Push live to the overlay so the slider reflects immediately.
     crate::overlay::emit_overlay_config(&app);
 
+    Ok(())
+}
+
+/// handy Phase Final.UI — persist the user's theme preference
+/// ("system" / "light" / "dark"). The `<html data-theme>` swap happens
+/// client-side in `ThemeToggle.tsx` for instant feedback; this command
+/// just writes the persisted choice so `main.tsx::applyPersistedTheme`
+/// can restore it on next launch. Unknown values fall back to System
+/// so a typo in settings.json never breaks the UI.
+#[tauri::command]
+#[specta::specta]
+pub fn change_theme_setting(app: AppHandle, theme: String) -> Result<(), String> {
+    let mut settings = settings::get_settings(&app);
+    settings.theme = match theme.as_str() {
+        "light" => ThemePreference::Light,
+        "dark" => ThemePreference::Dark,
+        "system" => ThemePreference::System,
+        other => {
+            warn!("Unknown theme preference '{}', defaulting to system", other);
+            ThemePreference::System
+        }
+    };
+    settings::write_settings(&app, settings);
     Ok(())
 }
 

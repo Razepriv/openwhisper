@@ -455,6 +455,7 @@ pub fn run(cli_args: CliArgs) {
             shortcut::change_overlay_position_setting,
             shortcut::change_floating_widget_enabled_setting,
             shortcut::change_floating_widget_opacity_setting,
+            shortcut::change_theme_setting,
             shortcut::change_debug_mode_setting,
             shortcut::change_word_correction_threshold_setting,
             shortcut::change_extra_recording_buffer_setting,
@@ -675,7 +676,7 @@ pub fn run(cli_args: CliArgs) {
             let initial_visible = !(cli_args.start_hidden);
             let mut win_builder =
                 tauri::WebviewWindowBuilder::new(app, "main", tauri::WebviewUrl::App("/".into()))
-                    .title("OpenWhisper")
+                    .title("handy")
                     .inner_size(680.0, 570.0)
                     .min_inner_size(680.0, 570.0)
                     .resizable(true)
