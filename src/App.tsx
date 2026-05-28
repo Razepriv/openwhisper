@@ -324,7 +324,13 @@ function App() {
         }}
       >
         {/* eslint-disable-next-line i18next/no-literal-string */}
-        <div style={{ fontSize: "18px", fontWeight: 600, letterSpacing: "-0.01em" }}>
+        <div
+          style={{
+            fontSize: "18px",
+            fontWeight: 600,
+            letterSpacing: "-0.01em",
+          }}
+        >
           handy
         </div>
         <div style={{ fontSize: "13px", opacity: 0.7 }}>

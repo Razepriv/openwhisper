@@ -58,6 +58,14 @@ export const AdvancedSettings: React.FC = () => {
         <CleanupLevelPicker descriptionMode="tooltip" grouped={true} />
       </SettingsGroup>
 
+      {/* handy Phase Final.UI — Performance group promoted out of the
+          experimental block. The GPU picker matters to every user with
+          a discrete graphics card (Whisper inference is 5-30× faster
+          on GPU than CPU), so it deserves a top-level surface. */}
+      <SettingsGroup title={t("settings.advanced.groups.performance")}>
+        <AccelerationSelector descriptionMode="tooltip" grouped={true} />
+      </SettingsGroup>
+
       <SettingsGroup title={t("settings.advanced.groups.history")}>
         <HistoryLimit descriptionMode="tooltip" grouped={true} />
         <RecordingRetentionPeriodSelector
@@ -73,7 +81,6 @@ export const AdvancedSettings: React.FC = () => {
             descriptionMode="tooltip"
             grouped={true}
           />
-          <AccelerationSelector descriptionMode="tooltip" grouped={true} />
           <LazyStreamClose descriptionMode="tooltip" grouped={true} />
         </SettingsGroup>
       )}

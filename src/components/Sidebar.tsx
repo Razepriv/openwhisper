@@ -175,11 +175,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
                   isActive ? "bg-accent" : "bg-transparent"
                 }`}
               />
-              <Icon
-                width={16}
-                height={16}
-                className="shrink-0"
-              />
+              <Icon width={16} height={16} className="shrink-0" />
               <span className="text-[13px] font-medium tracking-tight truncate">
                 {t(section.labelKey)}
               </span>

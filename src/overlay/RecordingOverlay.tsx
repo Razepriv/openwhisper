@@ -46,8 +46,40 @@ const RecordingOverlay: React.FC = () => {
   // CSS custom property (--widget-opacity) consumed by the .idle-clickable
   // rule in RecordingOverlay.css.
   const [widgetOpacity, setWidgetOpacity] = useState<number>(0.9);
+  // handy fix: track elapsed time during "transcribing" / "processing"
+  // states so the user sees the bar isn't stuck. CPU-only Whisper can
+  // take 5-15 s for a short clip; without this the static "Transcribing…"
+  // label is indistinguishable from a hang.
+  const [elapsedSec, setElapsedSec] = useState<number>(0);
+  const elapsedTickRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const smoothedLevelsRef = useRef<number[]>(Array(16).fill(0));
   const direction = getLanguageDirection(i18n.language);
+
+  // Start / stop the elapsed-seconds counter when the state enters
+  // a long-running phase. Recording itself doesn't get a counter
+  // (the bars already convey activity); only post-recording stages do.
+  useEffect(() => {
+    if (state === "transcribing" || state === "processing") {
+      setElapsedSec(0);
+      const started = Date.now();
+      elapsedTickRef.current = setInterval(() => {
+        setElapsedSec(Math.floor((Date.now() - started) / 1000));
+      }, 250);
+      return () => {
+        if (elapsedTickRef.current) {
+          clearInterval(elapsedTickRef.current);
+          elapsedTickRef.current = null;
+        }
+      };
+    }
+    // Reset counter when leaving the long-running phases.
+    setElapsedSec(0);
+    if (elapsedTickRef.current) {
+      clearInterval(elapsedTickRef.current);
+      elapsedTickRef.current = null;
+    }
+    return undefined;
+  }, [state]);
 
   useEffect(() => {
     const setupEventListeners = async () => {
@@ -175,10 +207,24 @@ const RecordingOverlay: React.FC = () => {
           </div>
         )}
         {state === "transcribing" && (
-          <div className="transcribing-text">{t("overlay.transcribing")}</div>
+          <div className="transcribing-text">
+            {t("overlay.transcribing")}
+            {elapsedSec > 0 && (
+              <span style={{ marginLeft: 6, opacity: 0.7 }}>
+                {elapsedSec}s
+              </span>
+            )}
+          </div>
         )}
         {state === "processing" && (
-          <div className="transcribing-text">{t("overlay.processing")}</div>
+          <div className="transcribing-text">
+            {t("overlay.processing")}
+            {elapsedSec > 0 && (
+              <span style={{ marginLeft: 6, opacity: 0.7 }}>
+                {elapsedSec}s
+              </span>
+            )}
+          </div>
         )}
       </div>
 

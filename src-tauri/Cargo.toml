@@ -1,6 +1,6 @@
 [package]
 name = "openwhisper"
-version = "0.1.0"
+version = "0.2.0"
 description = "OpenWhisper — 100% free, local-first, Wispr-Flow-class voice dictation"
 authors = ["OpenWhisper contributors", "cjpais (original Handy author)"]
 edition = "2021"

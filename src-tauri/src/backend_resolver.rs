@@ -308,10 +308,17 @@ fn stack_for_tier(tier: Tier) -> (&'static str, CleanupBackend, u64, &'static st
             "Whisper Medium + bundled llama.cpp",
         ),
         Tier::F => (
-            "small",
+            // handy fix: Windows CPU-only systems get Whisper Tiny by
+            // default instead of Small. Small on CPU takes 5–15 s for
+            // a 5 s clip — long enough that users assumed the app was
+            // hung at "Transcribing…". Tiny ships bundled with the
+            // installer (~75 MB) and runs near real-time on a typical
+            // x86_64 CPU. Users who want better accuracy can switch
+            // to Small / Medium from Settings → Models any time.
+            "tiny",
             CleanupBackend::LlamaSidecar,
             2_500,
-            "Whisper Small + bundled llama.cpp",
+            "Whisper Tiny + bundled llama.cpp",
         ),
         Tier::G => (
             "turbo",
@@ -320,10 +327,13 @@ fn stack_for_tier(tier: Tier) -> (&'static str, CleanupBackend, u64, &'static st
             "Whisper Turbo + bundled llama.cpp",
         ),
         Tier::H => (
-            "medium",
+            // handy fix: same reasoning as Tier F above — Linux CPU
+            // builds get Whisper Tiny for instant transcription on
+            // first launch.
+            "tiny",
             CleanupBackend::LlamaSidecar,
             2_500,
-            "Whisper Medium + bundled llama.cpp",
+            "Whisper Tiny + bundled llama.cpp",
         ),
         Tier::Z => (
             "moonshine-tiny-streaming-en",

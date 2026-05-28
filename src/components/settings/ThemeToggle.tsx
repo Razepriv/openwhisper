@@ -30,9 +30,9 @@ export const ThemeToggle: React.FC<ThemeToggleProps> = React.memo(
     const { t } = useTranslation();
     const { getSetting, updateSetting, isUpdating } = useSettings();
 
-    const current =
-      ((getSetting("theme" as never) as ThemePreference | undefined) ??
-        "system") as ThemePreference;
+    const current = ((getSetting("theme" as never) as
+      | ThemePreference
+      | undefined) ?? "system") as ThemePreference;
 
     const options = [
       { value: "system", label: t("settings.advanced.theme.options.system") },

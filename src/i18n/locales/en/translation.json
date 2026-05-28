@@ -435,6 +435,7 @@
         "app": "App",
         "output": "Output",
         "transcription": "Transcription",
+        "performance": "Performance",
         "history": "History",
         "experimental": "Experimental"
       },
@@ -449,7 +450,7 @@
       "acceleration": {
         "whisper": {
           "title": "Whisper Acceleration",
-          "description": "Hardware acceleration for Whisper models. Auto uses GPU if available (Metal on macOS, Vulkan on Windows/Linux)."
+          "description": "Pick which device runs Whisper inference. 'Auto' uses your dedicated GPU when available (Metal on macOS, Vulkan on Windows / Linux) and falls back to CPU otherwise. GPU is typically 5–30× faster than CPU on the same model. If no GPU appears in the list on Windows, your build wasn't compiled with the Vulkan feature — see BUILD.md to install the LunarG Vulkan SDK and rebuild."
         },
         "ort": {
           "title": "ONNX Acceleration",
