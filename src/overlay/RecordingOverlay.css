@@ -1,134 +1,200 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+ * Recording overlay — the floating widget
+ *
+ * Single pill that sits at the top or bottom of the screen and represents
+ * the current dictation state: idle, recording, transcribing, processing.
+ * In idle mode the pill is itself clickable to start dictation (Wispr Flow's
+ * "Flow Bar" pattern). The bars in the middle visualise mic levels during
+ * recording; "Transcribing… 3s" copy appears during the post-recording
+ * phases.
+ *
+ * Brand colours come from the violet accent. The pink Handy-legacy fills
+ * are gone — the only chromatic accent is the violet ring on focus and
+ * the violet wash on the cancel button hover.
+ * ═══════════════════════════════════════════════════════════════════════ */
+
+:root {
+  /* Scoped to the overlay — keeps tokens self-contained even if the
+     overlay HTML is rendered without the global App.css tokens loaded. */
+  --ov-violet: #a78bfa;
+  --ov-violet-soft: rgba(167, 139, 250, 0.18);
+  --ov-violet-ring: rgba(167, 139, 250, 0.55);
+  --ov-pill-bg: rgba(12, 12, 14, 0.82);
+  --ov-pill-bg-hover: rgba(12, 12, 14, 0.92);
+  --ov-text: #f8f8fa;
+  --ov-text-muted: rgba(248, 248, 250, 0.62);
+}
+
+/* ── Container pill ──────────────────────────────────────────────────── */
+
 .recording-overlay {
-  height: 36px;
-  width: 172px;
+  /* A little slimmer than before — 32px instead of 36 — and a hair
+     narrower, so it doesn't dominate the bottom of the screen. */
+  height: 32px;
+  width: 168px;
   display: grid;
   grid-template-columns: auto 1fr auto;
   align-items: center;
-  padding: 6px;
-  background: #000000cc;
-  border-radius: 18px;
+  gap: 6px;
+  padding: 4px 8px 4px 6px;
+  background: var(--ov-pill-bg);
+  border-radius: 999px;
+  /* Hairline border picks up the brand tint subtly without lighting up
+     the bar. Plus the shadow lifts it off the desktop on light bgs. */
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  box-shadow:
+    0 8px 24px rgba(0, 0, 0, 0.32),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset;
   opacity: 0;
-  transition: opacity 300ms ease-out;
+  transition: opacity 240ms ease-out, transform 160ms ease-out,
+    background-color 200ms ease-out;
   box-sizing: border-box;
+  backdrop-filter: saturate(180%) blur(14px);
+  -webkit-backdrop-filter: saturate(180%) blur(14px);
 }
 
-.overlay-left {
+.overlay-left,
+.overlay-middle,
+.overlay-right {
   display: flex;
   align-items: center;
 }
 
 .overlay-middle {
-  display: flex;
-  align-items: center;
   justify-content: center;
 }
 
 .overlay-right {
-  display: flex;
-  align-items: center;
   justify-content: flex-end;
 }
+
+/* ── Audio-level bars (during recording) ─────────────────────────────── */
 
 .bars-container {
   display: flex;
   align-items: end;
   justify-content: center;
-  gap: 3px;
-  padding-bottom: 0px;
-  height: 24px;
+  gap: 2px;
+  padding-bottom: 0;
+  height: 18px;
   overflow: hidden;
 }
 
 .bar {
-  width: 6px;
-  background: #ffe5ee;
-  max-height: 20px;
+  width: 3px;
+  background: var(--ov-violet);
+  max-height: 16px;
+  min-height: 3px;
   border-radius: 2px;
   transition: height 80ms linear;
-  min-height: 4px;
+  /* Subtle glow that follows the violet — pops on the dark pill but
+     reads as quiet. */
+  box-shadow: 0 0 4px var(--ov-violet-soft);
 }
 
 .recording-overlay.fade-in {
   opacity: 1;
 }
 
+/* ── Transcribing / processing copy ──────────────────────────────────── */
+
 .transcribing-text {
-  color: white;
-  font-size: 12px;
+  color: var(--ov-text);
+  font-size: 11.5px;
+  letter-spacing: -0.01em;
   font-family:
-    -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-  animation: transcribing-pulse 1.5s infinite ease-in-out;
+    "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums; /* keeps elapsed digits aligned */
+  animation: transcribing-pulse 1.6s infinite ease-in-out;
 }
 
 @keyframes transcribing-pulse {
   0%,
   100% {
-    opacity: 0.6;
+    opacity: 0.62;
   }
   50% {
     opacity: 1;
   }
 }
 
+/* ── Cancel button ───────────────────────────────────────────────────── */
+
 .cancel-button {
-  width: 24px;
-  height: 24px;
+  width: 22px;
+  height: 22px;
   border-radius: 50%;
   background: transparent;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  transition:
-    background-color 150ms ease-out,
-    transform 100ms ease-out;
+  transition: background-color 150ms ease-out, transform 120ms ease-out;
   flex-shrink: 0;
 }
 
 .cancel-button:hover {
-  background: #faa2ca33;
-  transform: scale(1.05);
+  background: var(--ov-violet-soft);
+  transform: scale(1.06);
 }
 
 .cancel-button:active {
   transform: scale(0.95);
 }
 
+/* ── Idle (clickable floating widget) ────────────────────────────────── */
+
 /*
- * OpenWhisper Phase UI.batch: persistent floating widget (Flow Bar
- * equivalent). When the overlay is in the "idle" state it acts as a
- * click target — these styles add the affordance (pointer cursor,
- * subtle hover/active lift) so users discover the click action.
+ * In idle mode the overlay is itself the click target (Wispr Flow's
+ * Flow Bar pattern). The cursor changes to a pointer, opacity dips
+ * toward the user-controlled value, and the pill softly grows on hover.
  *
- * The opacity of the bar in idle mode comes from `--widget-opacity`,
- * a CSS custom property set on `.recording-overlay` from React via the
- * `floating_widget_opacity` user setting (clamped backend-side to
- * [0.2, 1.0]). When the variable is unset we fall back to 0.9 to keep
- * the bar visible without dominating the screen.
+ * `--widget-opacity` is set on .recording-overlay from React based on
+ * the `floating_widget_opacity` setting (clamped backend-side to
+ * [0.2, 1.0]). If the variable is unset we default to 0.88 — visible
+ * but unobtrusive.
  */
 .recording-overlay.idle-clickable {
   cursor: pointer;
-  /* The .fade-in rule overrides opacity to 1; .idle-clickable layers
-   * the user-controlled opacity on top so the widget can be made
-   * slightly translucent while idle. */
-  opacity: var(--widget-opacity, 0.9);
-  transition:
-    opacity 200ms ease-out,
-    transform 100ms ease-out,
-    background-color 150ms ease-out;
+  opacity: var(--widget-opacity, 0.88);
+  transition: opacity 220ms ease-out, transform 120ms ease-out,
+    background-color 180ms ease-out, border-color 180ms ease-out,
+    box-shadow 220ms ease-out;
 }
 
 .recording-overlay.idle-clickable:hover {
   opacity: 1;
-  background: #000000e6;
-  transform: scale(1.03);
+  background: var(--ov-pill-bg-hover);
+  border-color: rgba(167, 139, 250, 0.18);
+  transform: scale(1.025);
+  box-shadow:
+    0 12px 32px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(167, 139, 250, 0.06),
+    0 1px 0 rgba(255, 255, 255, 0.04) inset;
 }
 
 .recording-overlay.idle-clickable:active {
-  transform: scale(0.97);
+  transform: scale(0.985);
 }
 
 .recording-overlay.idle-clickable:focus-visible {
-  outline: 2px solid #faa2caaa;
-  outline-offset: 2px;
+  outline: none;
+  border-color: var(--ov-violet);
+  box-shadow:
+    0 0 0 2px var(--ov-violet-ring),
+    0 8px 24px rgba(0, 0, 0, 0.32);
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .recording-overlay,
+  .recording-overlay.idle-clickable,
+  .bar,
+  .transcribing-text,
+  .cancel-button {
+    transition: none;
+    animation: none;
+  }
 }
