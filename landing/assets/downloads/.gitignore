@@ -1,0 +1,15 @@
+# Binaries — produced by `bun run tauri build`, then copied here by
+# `landing/sync-installers.ps1`. Don't commit them; let Vercel pick
+# them up from the working copy at deploy time.
+*.exe
+*.msi
+*.dmg
+*.deb
+*.rpm
+*.AppImage
+*.zip
+*.tar.gz
+
+# Keep the directory in version control.
+!.gitignore
+!.gitkeep

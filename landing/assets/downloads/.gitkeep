@@ -1,0 +1,8 @@
+# Downloads directory
+
+Tauri-built installers land here for direct download from the landing.
+
+Populated by `landing/sync-installers.ps1` after a `bun run tauri build`.
+Files are gitignored — the canonical source is the CI release artifact;
+this is just the local mirror so the landing can host the file directly
+instead of redirecting to GitHub.

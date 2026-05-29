@@ -119,10 +119,19 @@
     return null;
   }
 
-  /** Apply the OS-aware label to the hero primary download button. */
+  /**
+   * Apply the OS-aware label + correct href to the hero primary download
+   * button.
+   *
+   * Windows: served directly from this site at /assets/downloads/* (set in
+   * the HTML, no JS swap needed). Mac and Linux still hit GitHub Releases
+   * until the CI matrix build publishes them — when those land we can
+   * delete the `redirects` map below and the HTML href becomes universal.
+   */
   function applyOSLabel() {
     const os = detectOS();
     const labelEl = document.querySelector("[data-download-label]");
+    const btnEl = document.getElementById("primaryDownload");
     if (!labelEl || !os) return;
 
     const LABELS = {
@@ -131,6 +140,17 @@
       linux: "Download for Linux",
     };
     labelEl.textContent = LABELS[os];
+
+    // Until macOS / Linux installers ship locally, route those users to
+    // the GitHub release page. Windows users keep the direct-download
+    // href set in the HTML.
+    const releaseBase =
+      "https://github.com/Razepriv/openwhisper/releases/latest";
+    if (btnEl && (os === "macos" || os === "linux")) {
+      btnEl.setAttribute("href", releaseBase);
+      btnEl.removeAttribute("download");
+      btnEl.setAttribute("rel", "noopener");
+    }
 
     // Highlight the matching download card further down the page so the
     // user can find the exact asset for their system without scanning.

@@ -79,7 +79,7 @@
           </p>
 
           <div class="hero-ctas">
-            <a class="btn btn-primary btn-lg" id="primaryDownload" href="https://github.com/Razepriv/openwhisper/releases/latest" rel="noopener">
+            <a class="btn btn-primary btn-lg" id="primaryDownload" href="assets/downloads/OpenVoice_0.2.0_x64-setup.exe" download>
               <span data-download-icon aria-hidden="true">
                 <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
               </span>
@@ -277,8 +277,11 @@ function <span class="demo-fn">handleSubmit</span>(payload) {
             <span class="section-label">Download v0.2.0</span>
             <h2 class="section-title">Pick your OS. Unsigned by design.</h2>
             <p class="section-sub">
-              OpenVoice is distributed only via GitHub Releases — no app stores, no installers behind paywalls.
-              On Windows and macOS you'll see a one-time "Run anyway" warning the first time you launch it.
+              <strong>Windows builds are hosted right here on this page</strong> — click and the installer
+              saves straight to your Downloads folder, no detour through GitHub. macOS and ARM/Linux builds
+              ship from CI when the next release fires. On Windows and macOS you'll see a one-time "Run
+              anyway" warning the first time you launch — it's normal for software that doesn't ship a
+              $99/yr code-signing cert.
             </p>
           </header>
 
@@ -294,11 +297,11 @@ function <span class="demo-fn">handleSubmit</span>(payload) {
                 </div>
               </div>
               <ul class="download-files">
-                <li><a href="https://github.com/Razepriv/openwhisper/releases/latest" rel="noopener">OpenVoice_0.2.0_x64-setup.exe</a> <span class="file-tag">recommended</span></li>
-                <li><a href="https://github.com/Razepriv/openwhisper/releases/latest" rel="noopener">OpenVoice_0.2.0_x64_en-US.msi</a></li>
-                <li><a href="https://github.com/Razepriv/openwhisper/releases/latest" rel="noopener">OpenVoice_0.2.0_arm64-setup.exe</a></li>
+                <li><a href="assets/downloads/OpenVoice_0.2.0_x64-setup.exe" download>OpenVoice_0.2.0_x64-setup.exe</a> <span class="file-tag">recommended</span></li>
+                <li><a href="assets/downloads/OpenVoice_0.2.0_x64_en-US.msi" download>OpenVoice_0.2.0_x64_en-US.msi</a></li>
+                <li><a href="https://github.com/Razepriv/openwhisper/releases/latest" rel="noopener">OpenVoice_0.2.0_arm64-setup.exe</a> <span class="file-tag">CI build pending</span></li>
               </ul>
-              <p class="download-note">First launch: SmartScreen → "More info" → "Run anyway".</p>
+              <p class="download-note">Direct download — saved straight to your Downloads folder. First launch: SmartScreen → "More info" → "Run anyway".</p>
             </article>
 
             <article class="download-card" data-os="macos">
