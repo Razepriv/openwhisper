@@ -1,0 +1,10 @@
+# Staging area for Mac/Linux installers
+#
+# After triggering the GitHub Actions Release workflow, download the
+# CI-built .dmg / .deb / .rpm / .AppImage files into THIS directory.
+# Then run `landing/sync-installers.ps1` — it renames them into
+# `assets/downloads/` with the canonical filenames the landing's HTML
+# references, and the next `bunx vercel --prod` ships them.
+#
+# Files here are gitignored (see sibling .gitignore) so the repo stays
+# small — the canonical source is the CI release artifact.

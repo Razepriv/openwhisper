@@ -123,10 +123,14 @@
    * Apply the OS-aware label + correct href to the hero primary download
    * button.
    *
-   * Windows: served directly from this site at /assets/downloads/* (set in
-   * the HTML, no JS swap needed). Mac and Linux still hit GitHub Releases
-   * until the CI matrix build publishes them — when those land we can
-   * delete the `redirects` map below and the HTML href becomes universal.
+   * Every OS now points at `/assets/downloads/*` directly — Windows
+   * builds locally, Mac/Linux are populated by the CI matrix release
+   * job (see .github/workflows/release.yml). The hero button picks
+   * the OS-appropriate "recommended" file:
+   *   - Windows → x64 NSIS installer
+   *   - macOS   → aarch64 DMG (Apple Silicon — covers 90% of new Macs;
+   *               Intel users can still pick from the download table)
+   *   - Linux   → AppImage (portable, no install required)
    */
   function applyOSLabel() {
     const os = detectOS();
@@ -141,15 +145,15 @@
     };
     labelEl.textContent = LABELS[os];
 
-    // Until macOS / Linux installers ship locally, route those users to
-    // the GitHub release page. Windows users keep the direct-download
-    // href set in the HTML.
-    const releaseBase =
-      "https://github.com/Razepriv/openwhisper/releases/latest";
-    if (btnEl && (os === "macos" || os === "linux")) {
-      btnEl.setAttribute("href", releaseBase);
-      btnEl.removeAttribute("download");
-      btnEl.setAttribute("rel", "noopener");
+    const HREFS = {
+      windows: "assets/downloads/OpenVoice_0.2.0_x64-setup.exe",
+      macos: "assets/downloads/OpenVoice_0.2.0_aarch64.dmg",
+      linux: "assets/downloads/OpenVoice_0.2.0_amd64.AppImage",
+    };
+    if (btnEl) {
+      btnEl.setAttribute("href", HREFS[os]);
+      btnEl.setAttribute("download", "");
+      btnEl.removeAttribute("rel");
     }
 
     // Highlight the matching download card further down the page so the

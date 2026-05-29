@@ -1,0 +1,10 @@
+# Don't commit raw CI artifacts.
+*.dmg
+*.deb
+*.rpm
+*.AppImage
+*.zip
+*.tar.gz
+*.tar.xz
+!.gitignore
+!.gitkeep

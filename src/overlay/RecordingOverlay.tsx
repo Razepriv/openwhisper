@@ -225,12 +225,30 @@ const RecordingOverlay: React.FC = () => {
       </div>
 
       <div className="overlay-right">
-        {state === "recording" && (
+        {/* Cancel is reachable from every active state — including
+            `transcribing` and `processing` — so a user who doesn't
+            want to wait out a slow Whisper pass can abort it. Only
+            hidden in the `idle` state, where there's nothing to
+            cancel (clicking the pill there starts dictation instead).
+            cancel_operation tears down the pipeline cleanly: clears
+            captured audio, restores focus, drops the elapsed timer. */}
+        {state !== "idle" && (
           <div
             className="cancel-button"
+            role="button"
+            tabIndex={0}
+            title={t("tray.cancel", "Cancel")}
+            aria-label={t("tray.cancel", "Cancel")}
             onClick={(e) => {
               e.stopPropagation();
               commands.cancelOperation();
+            }}
+            onKeyDown={(e) => {
+              if (e.key === "Enter" || e.key === " ") {
+                e.preventDefault();
+                e.stopPropagation();
+                commands.cancelOperation();
+              }
             }}
           >
             <CancelIcon />

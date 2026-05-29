@@ -84,13 +84,20 @@ impl VibeContext {
 /// Substring markers we look for in `ActiveApp::matchable()`. Order
 /// doesn't matter — first hit wins by category.
 const GRAPHICAL_IDE_MARKERS: &[&str] = &[
-    "cursor",
+    // VS Code family
     "code.exe",
     " code ",
     "/code",
     "\\code",
-    "windsurf",
     "vscode",
+    "code - insiders",
+    // VS Code AI forks
+    "cursor",
+    "windsurf",
+    "trae", // Bytedance's AI IDE
+    "void",  // Open-source AI fork of VS Code
+    "zed",   // Zed.dev — fast collaborative editor with AI
+    // JetBrains family
     "intellij",
     "pycharm",
     "webstorm",
@@ -98,6 +105,21 @@ const GRAPHICAL_IDE_MARKERS: &[&str] = &[
     "rustrover",
     "rider",
     "phpstorm",
+    "clion",
+    "rubymine",
+    "datagrip",
+    "appcode",
+    "androidstudio",
+    "android studio",
+    // Other widely used editors
+    "sublime_text",
+    "sublime text",
+    "notepad++",
+    "atom",
+    "brackets",
+    "geany",
+    // Modern JetBrains-adjacent
+    "fleet", // JetBrains Fleet
 ];
 
 const AGENT_TERMINAL_MARKERS: &[&str] = &[
