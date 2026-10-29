@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="OpenVoice vs Wispr Flow: feature-by-feature comparison of two voice dictation apps with opposite architectures. Cloud SaaS at $12-15/mo vs local-first free open-source. Pricing, accuracy, privacy, platform support, and when each one wins." />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta property="og:title" content="OpenVoice vs Wispr Flow: a feature-by-feature comparison" />
+    <meta property="og:description" content="Wispr runs on someone else's servers and costs $12-15/mo. OpenVoice runs on your laptop and costs $0. We line up the features, the limits, and the real trade-offs." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://handy.apexaios.io/blog/posts/openvoice-vs-wispr-flow.html" />
+    <meta property="article:published_time" content="2026-06-13" />
+    <meta property="article:section" content="vs" />
+    <title>OpenVoice vs Wispr Flow - feature-by-feature comparison</title>
+    <link rel="alternate" type="application/rss+xml" title="OpenVoice Dispatch RSS" href="/blog/feed.xml" />
+    <link rel="canonical" href="https://handy.apexaios.io/blog/posts/openvoice-vs-wispr-flow.html" />
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/blog/blog.css" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c3aed'/%3E%3Crect x='9' y='13' width='3' height='6' rx='1.5' fill='white'/%3E%3Crect x='14.5' y='9' width='3' height='14' rx='1.5' fill='white'/%3E%3Crect x='20' y='11' width='3' height='10' rx='1.5' fill='white'/%3E%3C/svg%3E" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-nav">
+      <div class="nav-inner">
+        <a href="/" class="brand" aria-label="OpenVoice home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" class="brand-mark-fill" />
+            <rect x="9" y="13" width="3" height="6" rx="1.5" fill="currentColor" class="brand-mark-stroke" />
+            <rect x="14.5" y="9" width="3" height="14" rx="1.5" fill="currentColor" class="brand-mark-stroke" />
+            <rect x="20" y="11" width="3" height="10" rx="1.5" fill="currentColor" class="brand-mark-stroke" />
+          </svg>
+          <span class="brand-wordmark">OpenVoice</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#privacy">Privacy</a>
+          <a href="/#download">Download</a>
+          <a href="/blog/" aria-current="page">Dispatch</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <span class="theme-icon" data-theme-icon></span>
+            <span class="theme-label" data-theme-label>System</span>
+          </button>
+          <a class="btn btn-ghost" href="https://github.com/Razepriv/openwhisper" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <article class="article">
+        <a class="article-back" href="/blog/">&larr; The Dispatch</a>
+
+        <header class="article-header">
+          <span class="article-kicker">vs &middot; Day 2</span>
+          <h1 class="article-title">OpenVoice vs Wispr Flow: a feature-by-feature comparison</h1>
+          <p class="article-dek">
+            Wispr Flow runs on someone else's servers and costs $12-15/month. OpenVoice runs on your laptop and costs $0. We line up the features, the limits, and the actual trade-offs.
+          </p>
+          <div class="article-byline">
+            <span>By the OpenVoice maintainers</span>
+            <span>June 13, 2026</span>
+            <span>9 min read</span>
+          </div>
+        </header>
+
+        <div class="article-body">
+          <div class="tldr">
+            <span class="tldr-label">TL;DR</span>
+            <ul>
+              <li><strong>Wispr Flow</strong> is a cloud SaaS at ~$12/mo (Pro) or ~$15/mo (Teams). It has slightly better accuracy on uncommon accents and a slicker first-run experience. Your audio is processed on Wispr's servers.</li>
+              <li><strong>OpenVoice</strong> is a free, open-source desktop app. It runs Whisper locally on your machine. Costs $0 forever. Accuracy is within a few percentage points of Wispr on standard accents and competitive on technical vocabulary thanks to the Personal Dictionary.</li>
+              <li><strong>Pick Wispr</strong> if you don't care about privacy, you want the absolute best out-of-box accuracy, and the subscription is a rounding error.</li>
+              <li><strong>Pick OpenVoice</strong> if you're in a regulated industry, you object to subscriptions on principle, you work offline, or you want to customize the LLM cleanup pipeline.</li>
+            </ul>
+          </div>
+
+          <p>
+            Wispr Flow is, by some distance, the dictation app that made everyone realize how much better dictation could be in 2025-2026. Their team built a genuinely good product. The Twitter screenshots, the YC investment, the founders dictating their entire workflow on stage - all earned.
+          </p>
+
+          <p>
+            OpenVoice was built specifically because Wispr's architecture - your microphone streaming to someone else's servers - is a non-starter for a meaningful set of users. This post is an honest comparison, not a hatchet job. There are real reasons to pick either one. Let's walk through them.
+          </p>
+
+          <h2>1. Pricing</h2>
+
+          <p>The biggest delta, and the one that matters most for most users:</p>
+
+          <ul>
+            <li><strong>Wispr Flow Pro:</strong> $12/month or $144/year, individual plan. Unlimited dictation, all features.</li>
+            <li><strong>Wispr Flow Teams:</strong> ~$15/seat/month, billed annually, with admin controls and SSO.</li>
+            <li><strong>OpenVoice:</strong> $0. Forever. There is no paid tier and there will never be one. Source code is MIT-licensed on GitHub.</li>
+          </ul>
+
+          <p>
+            Three years of Wispr Pro is $432. That's a meaningful amount of money for an individual, and a meaningful line item for an org of any size. OpenVoice's lifetime cost is the bandwidth to download the installer.
+          </p>
+
+          <h2>2. Where your audio goes</h2>
+
+          <p>This is the architectural difference, and everything else flows from it:</p>
+
+          <ul>
+            <li><strong>Wispr Flow:</strong> when you hold the hotkey and speak, audio is captured locally, then streamed to Wispr's cloud infrastructure where their ASR model transcribes it. The transcript is returned and pasted into your focused app. Wispr's privacy policy says they don't retain recordings beyond what's needed to operate the service - but the data path is "your microphone - their servers - their model - back to your computer."</li>
+            <li><strong>OpenVoice:</strong> audio is captured locally, transcribed by whisper.cpp running on your machine's CPU or GPU, returned to the OpenVoice process, pasted into your focused app. The audio never leaves your process boundary. The Rust backend has a URL allowlist hardcoded into the source - only loopback addresses and OS-vendor on-device endpoints are permitted. You can verify this with a packet capture: nothing leaves the machine during dictation.</li>
+          </ul>
+
+          <p>
+            For an individual writing a Slack message, neither path is particularly worrying. For a lawyer dictating notes about an unannounced case, a journalist working on a sensitive story, anyone subject to GDPR, anyone working under HIPAA, or anyone whose laptop sometimes opens documents under NDA - only one of the two is acceptable.
+          </p>
+
+          <h2>3. Accuracy</h2>
+
+          <p>The most-asked question and the most-nuanced answer.</p>
+
+          <p>
+            On a clean clear American or British accent with standard vocabulary, Wispr Flow is slightly more accurate than OpenVoice running Whisper Small - call it ~96% vs ~94% word accuracy in informal benchmarking. With Whisper Medium or Large, OpenVoice closes the gap to within a percent or so. With the Personal Dictionary trained on your jargon, OpenVoice often beats Wispr on technical material.
+          </p>
+
+          <p>
+            Where Wispr has a real edge: <strong>non-native accents</strong>, particularly Indian English, Singaporean English, and some West African accents. Wispr's training data includes more of these, and the gap is noticeable.
+          </p>
+
+          <p>
+            Where OpenVoice has a real edge: <strong>code, identifiers, file paths, technical acronyms.</strong> The Vibe Coding mode (which detects when you're focused on Cursor, VS Code, Claude Code, etc.) changes the transcription profile to bias toward camelCase, snake_case, and code-like structures. Wispr does this too but the implementation is less aggressive.
+          </p>
+
+          <p>Both are good enough that accuracy is rarely the deciding factor for most users.</p>
+
+          <h2>4. Feature matrix</h2>
+
+          <p>The features Wispr made famous, and how OpenVoice handles each:</p>
+
+          <ul>
+            <li><strong>Push-to-talk dictation everywhere:</strong> yes both.</li>
+            <li><strong>Auto-cleanup of filler words and punctuation:</strong> yes Wispr (cloud LLM). yes OpenVoice (local llama.cpp, 4-tier picker, runs offline).</li>
+            <li><strong>Command Mode (highlight - speak - rewrite):</strong> yes Wispr. yes OpenVoice.</li>
+            <li><strong>Custom vocabulary / dictionary:</strong> yes Wispr. yes OpenVoice (Personal Dictionary with starred-term weighting).</li>
+            <li><strong>Snippets / text expansion:</strong> yes Wispr. yes OpenVoice.</li>
+            <li><strong>Cancel hotkey mid-recording:</strong> yes Wispr. yes OpenVoice (with visible cancel button on the widget across all states).</li>
+            <li><strong>Mac, Windows, Linux:</strong> Wispr: Mac + Windows only, no Linux. OpenVoice: all three.</li>
+            <li><strong>Code-aware mode (Vibe Coding):</strong> yes Wispr (handful of editors). yes OpenVoice (~25 editors and coding-agent terminals, plus user-extensible list).</li>
+            <li><strong>Custom transforms (hotkey-bound rewrites):</strong> Wispr has a fixed set. OpenVoice has a fully user-configurable transform system - bind any hotkey to any prompt.</li>
+            <li><strong>Offline use:</strong> no Wispr (cloud-required). yes OpenVoice (offline by design).</li>
+            <li><strong>Streaming transcription (text appears as you speak):</strong> yes Wispr. OpenVoice: coming in v0.3.</li>
+            <li><strong>Real-time language switching:</strong> yes Wispr. OpenVoice: planned for v0.3.</li>
+            <li><strong>SSO / admin controls:</strong> yes Wispr Teams. no OpenVoice (it's a desktop app, not a service).</li>
+          </ul>
+
+          <h2>5. First-run experience</h2>
+
+          <p>
+            <strong>Wispr</strong> wins here, no contest. Download, sign in with Google or email, click through three onboarding screens, you're dictating. No model download. No hardware probing. No installer SmartScreen prompt on Windows.
+          </p>
+
+          <p>
+            <strong>OpenVoice</strong> has a more involved first-run: install the app, dismiss the unsigned-installer warning, let the auto-provisioner pick and download a model (10-60 seconds), set your hotkey. Three minutes from download click to first dictation, on a decent connection.
+          </p>
+
+          <p>
+            The OpenVoice first-run is the price of not requiring an account or a cloud - every byte you need to dictate is on your machine before the first hotkey press.
+          </p>
+
+          <h2>6. Customization</h2>
+
+          <p>
+            <strong>Wispr</strong> is intentionally opinionated. The settings are spare. You can customize your hotkey, your microphone, your cleanup style. Beyond that, the app does what it does.
+          </p>
+
+          <p>
+            <strong>OpenVoice</strong> exposes more knobs. The full settings surface includes the hotkey set (dictation + post-process + command-mode + cancel), the Whisper model picker (Tiny/Small/Medium/Large), the cleanup tier picker (Off/Light/Medium/High), the active LLM model for cleanup (any local llama.cpp-compatible GGUF), the Personal Dictionary editor, the Transforms editor (bind your own prompts to hotkeys), the Snippets editor, the Vibe Coding marker list, and the audio device picker.
+          </p>
+
+          <p>
+            More knobs are good if you want them and overwhelming if you don't. OpenVoice's defaults are aggressively chosen so you can ignore the knobs and the app behaves well; the auto-provisioner exists specifically to make first-run zero-question.
+          </p>
+
+          <h2>7. The long-term bet</h2>
+
+          <p>
+            Wispr is a company. They've raised capital, they have a roadmap, and they have a business model that requires keeping the SaaS running. If they're acquired, pivot, or change pricing, you're affected - your dictation hotkey suddenly costs more, or stops working, or starts logging to a place you didn't sign up for.
+          </p>
+
+          <p>
+            OpenVoice is open-source software. The repository is MIT-licensed, mirrored to multiple places, and forkable. Worst case, the original maintainers stop shipping - the version on your laptop keeps working forever, because it doesn't need a server to function. The lock-in risk is approximately zero.
+          </p>
+
+          <h2>When to pick which</h2>
+
+          <p><strong>Pick Wispr Flow if:</strong></p>
+          <ul>
+            <li>You want the absolute best out-of-box accuracy and your accent is not standard American/British.</li>
+            <li>You want streaming dictation (text appears as you speak) today, not in a future release.</li>
+            <li>You're on Mac or Windows and your team needs admin/SSO/billing controls.</li>
+            <li>You don't have any privacy concerns and the $12/mo is a non-issue.</li>
+          </ul>
+
+          <p><strong>Pick OpenVoice if:</strong></p>
+          <ul>
+            <li>You're in a regulated industry - legal, healthcare, finance, journalism, government.</li>
+            <li>You work under any NDA where a vendor processing your audio would be a problem.</li>
+            <li>You object to subscriptions on principle, or your org's expense process makes a $12/mo line item painful.</li>
+            <li>You're on Linux.</li>
+            <li>You want to extend the app - custom Transforms, custom prompts, code modifications.</li>
+            <li>You sometimes work offline (flights, basements, secure facilities).</li>
+            <li>You want to own the tool, not lease it.</li>
+          </ul>
+
+          <h2>An honest closing</h2>
+
+          <p>
+            Wispr Flow is a good product. Their team has shipped features faster than most. If they're a fit for your situation, use them - they've earned the recommendation.
+          </p>
+
+          <p>
+            We built OpenVoice because there was no version of Wispr that ran locally, and we wanted one. Now that one exists, you have a choice you didn't have before. That's the whole pitch.
+          </p>
+
+          <div class="cta-box">
+            <h3 class="cta-box-title">Try OpenVoice for free</h3>
+            <p class="cta-box-dek">Free, open-source, runs entirely on your hardware. Mac, Windows, and Linux.</p>
+            <a class="btn btn-primary btn-lg" href="/#download">Download OpenVoice</a>
+          </div>
+
+          <p>
+            Tomorrow's post: <a href="/blog/posts/why-whisper-tiny-ships-in-the-installer.html">why we ship Whisper Tiny inside the installer</a>, and what that means for privacy.
+          </p>
+        </div>
+
+        <section class="related">
+          <div class="related-label">Read next</div>
+          <div class="related-grid">
+            <a class="related-card" href="/blog/posts/why-whisper-tiny-ships-in-the-installer.html">
+              <div class="related-card-kicker">Day 3 &middot; Under the hood</div>
+              <h3 class="related-card-title">Why we ship Whisper Tiny inside the installer</h3>
+            </a>
+            <a class="related-card" href="/blog/posts/privacy-showdown-wispr-dragon-openvoice.html">
+              <div class="related-card-kicker">Day 18 &middot; Privacy</div>
+              <h3 class="related-card-title">Privacy showdown: Wispr, Dragon, Apple Dictation, OpenVoice</h3>
+            </a>
+            <a class="related-card" href="/blog/posts/introducing-openvoice.html">
+              <div class="related-card-kicker">Day 0 &middot; Launch</div>
+              <h3 class="related-card-title">Introducing OpenVoice</h3>
+            </a>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer class="colophon">
+      <div class="colophon-rule"></div>
+      <div class="colophon-grid">
+        <div>
+          <div class="colophon-label">OpenVoice</div>
+          <p>100% local, 100% free voice dictation for Mac, Windows, and Linux. <a href="/">Back to the home page</a>.</p>
+        </div>
+        <div>
+          <div class="colophon-label">Subscribe</div>
+          <p>New posts daily for 30 days. Get them in your reader via <a href="/blog/feed.xml">RSS</a>.</p>
+        </div>
+        <div>
+          <div class="colophon-label">Lineage</div>
+          <p>Forked from <a href="https://github.com/cjpais/Handy" rel="noopener">cjpais/Handy</a> (MIT). Built on whisper.cpp, llama.cpp, and Tauri.</p>
+        </div>
+        <div>
+          <div class="colophon-label">Find us</div>
+          <p>
+            <a href="https://github.com/Razepriv/openwhisper" rel="noopener">GitHub</a> &middot;
+            <a href="https://github.com/Razepriv/openwhisper/releases" rel="noopener">Releases</a> &middot;
+            <a href="/blog/feed.xml">RSS</a>
+          </p>
+        </div>
+      </div>
+      <div class="colophon-bottom">
+        <span>&copy; <span id="year">2026</span> OpenVoice contributors</span>
+        <span>No telemetry. No tracking. No cookies on this page.</span>
+      </div>
+    </footer>
+
+    <script src="/script.js" defer></script>
+  </body>
+</html>

@@ -1,0 +1,96 @@
+name: "Blog drip"
+
+# Daily cron that flips scheduled OpenVoice Dispatch posts from draft to
+# live, regenerates RSS + sitemap, commits the change, and (optionally)
+# pokes Vercel via a deploy-hook URL.
+#
+# The manifest at landing/blog/manifest.json is the source of truth for
+# what's scheduled when. publish-due-posts.ps1 finds posts where
+#   draft == true AND publish <= today (UTC)
+# and flips them. Idempotent: re-running on the same day is a no-op
+# because the script only flips draft → live once.
+#
+# Setup (one-off):
+#   1. Repo Settings → Secrets and variables → Actions → New secret:
+#      VERCEL_DEPLOY_HOOK = the deploy-hook URL from the Vercel project
+#      settings ("Git → Deploy Hooks"). Optional: if not set, the
+#      workflow still commits the manifest change. If you've connected
+#      the Vercel project to this repo's main branch, Vercel will
+#      auto-deploy from the commit and the hook is unnecessary.
+#   2. Repo Settings → Actions → General → Workflow permissions:
+#      ensure "Read and write permissions" is enabled. The workflow
+#      needs this to push the manifest update back to main.
+
+on:
+  schedule:
+    # 09:00 UTC daily. Cron in GitHub Actions runs in UTC; the manifest
+    # uses date-only YYYY-MM-DD strings so we don't have to worry about
+    # timezone math beyond "use UTC consistently."
+    - cron: "0 9 * * *"
+  workflow_dispatch:
+    # Manual trigger — useful for testing the flip script, or running a
+    # catch-up flip after a missed scheduled run.
+
+# Only one drip run at a time. Queue rather than cancel because a missed
+# run still has work to do — we don't want a long-running run to be
+# cancelled by a manual dispatch and lose the flip.
+concurrency:
+  group: blog-drip
+  cancel-in-progress: false
+
+permissions:
+  contents: write
+
+jobs:
+  drip:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          # Need write access to push the manifest update back.
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Flip due posts to live (PowerShell)
+        id: flip
+        shell: pwsh
+        run: |
+          # publish-due-posts.ps1 exits:
+          #   0 = nothing to flip
+          #   2 = flipped + regenerated feed/sitemap
+          #   1 = error
+          $exit = 0
+          try {
+            & ./landing/blog/publish-due-posts.ps1
+            $exit = $LASTEXITCODE
+          } catch {
+            Write-Error $_
+            $exit = 1
+          }
+          Write-Host "publish-due-posts exit: $exit"
+          "exit=$exit" >> $env:GITHUB_OUTPUT
+          # Treat exit 2 as success for the step. Only exit 1 should fail.
+          if ($exit -eq 1) { exit 1 } else { exit 0 }
+
+      - name: Commit and push if changed
+        if: steps.flip.outputs.exit == '2'
+        run: |
+          git config user.name  "openvoice-bot"
+          git config user.email "noreply@apexaios.io"
+          git add landing/blog/manifest.json landing/blog/feed.xml landing/blog/sitemap.xml
+          # Compose the commit body from the slugs that just flipped.
+          # publish-due-posts.ps1 logged them; we cheat and just include
+          # the date so the message stays small.
+          today=$(date -u +%Y-%m-%d)
+          git commit -m "feat(blog): publish posts due on $today" \
+                     -m "Auto-published by .github/workflows/blog-drip.yml from landing/blog/manifest.json."
+          git push
+
+      - name: Trigger Vercel redeploy (if hook configured)
+        if: steps.flip.outputs.exit == '2' && env.VERCEL_DEPLOY_HOOK != ''
+        env:
+          VERCEL_DEPLOY_HOOK: ${{ secrets.VERCEL_DEPLOY_HOOK }}
+        run: |
+          # Vercel deploy hooks accept an empty POST. They return JSON
+          # with the new deployment ID; we don't need to parse it.
+          curl -fsSL -X POST "$VERCEL_DEPLOY_HOOK" -o /dev/null -w "Vercel deploy hook → HTTP %{http_code}\n"

@@ -40,8 +40,7 @@ const HandyTextLogo = ({
         width: `${w}px`,
         height: `${h}px`,
         color: "var(--color-text)",
-        fontFamily:
-          'Inter, "Segoe UI", system-ui, -apple-system, sans-serif',
+        fontFamily: 'Inter, "Segoe UI", system-ui, -apple-system, sans-serif',
         fontWeight: 600,
         fontSize: `${fontSize}px`,
         letterSpacing: "-0.02em",
@@ -57,12 +56,7 @@ const HandyTextLogo = ({
         aria-hidden="true"
         style={{ flexShrink: 0 }}
       >
-        <rect
-          width="32"
-          height="32"
-          rx="8"
-          className="logo-primary"
-        />
+        <rect width="32" height="32" rx="8" className="logo-primary" />
         {/* Three white bars — audio-equalizer pattern. Heights chosen so the
             middle bar reads as the strongest peak (typical waveform shape). */}
         <rect x="9" y="13" width="3" height="6" rx="1.5" fill="white" />

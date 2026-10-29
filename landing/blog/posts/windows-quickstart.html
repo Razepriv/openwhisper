@@ -1,0 +1,260 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Step-by-step Windows install guide for OpenVoice - the 100% local voice dictation desktop app. Download the MSI, dismiss SmartScreen, set your hotkey, dictate. Five minutes start to finish, with the three settings worth touching on day one." />
+    <meta name="theme-color" content="#7c3aed" />
+    <meta property="og:title" content="Installing OpenVoice on Windows in under 5 minutes" />
+    <meta property="og:description" content="Download the installer, dismiss the SmartScreen prompt, set your hotkey, dictate. Annotated walkthrough and the only three settings worth touching." />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content="https://handy.apexaios.io/blog/posts/windows-quickstart.html" />
+    <meta property="article:published_time" content="2026-06-12" />
+    <meta property="article:section" content="Tutorial" />
+    <title>Installing OpenVoice on Windows - 5-minute quickstart</title>
+    <link rel="alternate" type="application/rss+xml" title="OpenVoice Dispatch RSS" href="/blog/feed.xml" />
+    <link rel="canonical" href="https://handy.apexaios.io/blog/posts/windows-quickstart.html" />
+    <link rel="preconnect" href="https://fonts.bunny.net" crossorigin />
+    <link href="https://fonts.bunny.net/css?family=inter:400,500,600,700&display=swap" rel="stylesheet" />
+    <link rel="stylesheet" href="/styles.css" />
+    <link rel="stylesheet" href="/blog/blog.css" />
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%237c3aed'/%3E%3Crect x='9' y='13' width='3' height='6' rx='1.5' fill='white'/%3E%3Crect x='14.5' y='9' width='3' height='14' rx='1.5' fill='white'/%3E%3Crect x='20' y='11' width='3' height='10' rx='1.5' fill='white'/%3E%3C/svg%3E" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/assets/icon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/assets/icon-180.png" />
+  </head>
+  <body>
+    <a class="skip-link" href="#main">Skip to content</a>
+
+    <header class="site-nav">
+      <div class="nav-inner">
+        <a href="/" class="brand" aria-label="OpenVoice home">
+          <svg class="brand-mark" viewBox="0 0 32 32" aria-hidden="true">
+            <rect width="32" height="32" rx="8" class="brand-mark-fill" />
+            <rect x="9" y="13" width="3" height="6" rx="1.5" fill="currentColor" class="brand-mark-stroke" />
+            <rect x="14.5" y="9" width="3" height="14" rx="1.5" fill="currentColor" class="brand-mark-stroke" />
+            <rect x="20" y="11" width="3" height="10" rx="1.5" fill="currentColor" class="brand-mark-stroke" />
+          </svg>
+          <span class="brand-wordmark">OpenVoice</span>
+        </a>
+        <nav class="nav-links" aria-label="Primary">
+          <a href="/#features">Features</a>
+          <a href="/#privacy">Privacy</a>
+          <a href="/#download">Download</a>
+          <a href="/blog/" aria-current="page">Dispatch</a>
+        </nav>
+        <div class="nav-actions">
+          <button type="button" class="theme-toggle" id="themeToggle" aria-label="Toggle theme">
+            <span class="theme-icon" data-theme-icon></span>
+            <span class="theme-label" data-theme-label>System</span>
+          </button>
+          <a class="btn btn-ghost" href="https://github.com/Razepriv/openwhisper" rel="noopener">GitHub</a>
+        </div>
+      </div>
+    </header>
+
+    <main id="main">
+      <article class="article">
+        <a class="article-back" href="/blog/">&larr; The Dispatch</a>
+
+        <header class="article-header">
+          <span class="article-kicker">Tutorial &middot; Day 1</span>
+          <h1 class="article-title">Installing OpenVoice on Windows in under 5 minutes</h1>
+          <p class="article-dek">
+            Download the installer, dismiss the one-time SmartScreen prompt, set your hotkey, dictate. Plus the only three settings worth touching on day one.
+          </p>
+          <div class="article-byline">
+            <span>By the OpenVoice maintainers</span>
+            <span>June 12, 2026</span>
+            <span>5 min read</span>
+          </div>
+        </header>
+
+        <div class="article-body">
+          <div class="tldr">
+            <span class="tldr-label">TL;DR &middot; Three steps</span>
+            <ol>
+              <li><strong>Download</strong> <code>OpenVoice_0.2.0_x64-setup.exe</code> from <a href="/#download">the landing page</a>.</li>
+              <li><strong>SmartScreen will warn you once</strong> - click "More info" - "Run anyway". (It's unsigned because we're a brand-new MIT project; signing is on the v0.3 list.)</li>
+              <li><strong>Press your dictation hotkey</strong> (defaults to <code>Ctrl+Space</code>), speak, release. Text pastes into the focused app.</li>
+            </ol>
+            <p>If you only have five minutes, the three steps above are enough. The rest of this post covers the three settings you'll want to touch in the first week.</p>
+          </div>
+
+          <h2>Step 1: Download the installer</h2>
+
+          <p>Head to <a href="/#download">handy.apexaios.io/#download</a> and grab the Windows installer. You have two formats:</p>
+
+          <ul>
+            <li><code>OpenVoice_0.2.0_x64-setup.exe</code> - the NSIS installer. Use this one unless you have a reason not to. ~85 MB.</li>
+            <li><code>OpenVoice_0.2.0_x64_en-US.msi</code> - the MSI installer. Use this if you're rolling out via Group Policy, Intune, or another deployment tool that prefers MSI.</li>
+          </ul>
+
+          <p>
+            Both produce the same installed app. The download is served from the landing page CDN, not GitHub Releases, so you don't need a GitHub account and you don't get redirected through any third party.
+          </p>
+
+          <h2>Step 2: Get past SmartScreen</h2>
+
+          <p>
+            The first time you run an unsigned installer on Windows, you get the blue <em>"Microsoft Defender SmartScreen prevented an unrecognized app from starting"</em> dialog. This is expected - code signing certificates cost ~$300/year and we haven't bought one yet (it's on the v0.3 roadmap).
+          </p>
+
+          <ol>
+            <li>Click <strong>More info</strong> on the SmartScreen dialog.</li>
+            <li>Click <strong>Run anyway</strong>.</li>
+            <li>The installer proceeds. UAC will prompt for admin - that's the installer asking for permission to put the app in <code>%LocalAppData%\Programs\OpenVoice</code>.</li>
+          </ol>
+
+          <p>
+            If you'd rather verify before clicking through: the SHA-256 of every release is in <a href="https://github.com/Razepriv/openwhisper/releases" rel="noopener">the release notes on GitHub</a>. Run <code>Get-FileHash OpenVoice_0.2.0_x64-setup.exe</code> in PowerShell and match against the published hash.
+          </p>
+
+          <h2>Step 3: First launch - let it pick a model</h2>
+
+          <p>
+            After the installer finishes, OpenVoice opens to the auto-provisioner. This is the screen that decides which Whisper model gets downloaded for you. It probes your CPU, GPU, and RAM, classifies you into one of nine hardware tiers, and recommends the largest model that will give you near-real-time transcription on your machine.
+          </p>
+
+          <blockquote>
+            <p><strong>What you'll probably see:</strong> a recent gaming laptop or workstation will get Whisper Small (~480 MB). An ultraportable with integrated graphics gets Tiny (~75 MB, already bundled). A desktop with a dedicated GPU and 32 GB+ RAM gets Medium (~1.5 GB) or Large (~3 GB) depending on the card.</p>
+          </blockquote>
+
+          <p>
+            You can click <strong>Pick a different model</strong> if you want to override. Most people accept the recommendation and move on. Download takes 10-60 seconds depending on your connection.
+          </p>
+
+          <p>
+            <strong>What if you don't want to wait?</strong> Click <strong>Skip - use Tiny</strong>. The bundled Tiny model is ready immediately and is genuinely usable for most short-form dictation. You can upgrade later from <em>Settings - Models</em>.
+          </p>
+
+          <h2>Step 4: Your first dictation</h2>
+
+          <p>
+            OpenVoice minimizes to the system tray after first-run setup. The default hotkey is <code>Ctrl+Space</code>. Here's the rhythm:
+          </p>
+
+          <ol>
+            <li>Click into <em>any</em> text field - Notepad, Word, Slack, your browser address bar, a Cursor file. It doesn't matter.</li>
+            <li>Hold <code>Ctrl+Space</code>.</li>
+            <li>Speak. The widget appears in the bottom-right corner with three violet bars pulsing while you speak - that's the equalizer animation showing audio is being captured.</li>
+            <li>Release <code>Ctrl+Space</code>. The bars switch to three loading dots while Whisper transcribes (usually under a second on Tiny, 1-3 seconds on Small).</li>
+            <li>The transcript pastes into the field you were focused on. The widget fades back out.</li>
+          </ol>
+
+          <p>
+            If you'd rather toggle than hold (press once to start, press again to stop), open <em>Settings - General - Recording mode</em> and switch from <strong>Push-to-talk</strong> to <strong>Toggle</strong>. The hotkey stays the same; only the trigger semantics change.
+          </p>
+
+          <h2>The only three settings worth touching on day one</h2>
+
+          <p>OpenVoice has a lot of settings. Most are fine at defaults. These three are the ones that change the experience the most:</p>
+
+          <h3>1. The dictation hotkey itself</h3>
+
+          <p>
+            <code>Ctrl+Space</code> is great on a clean Windows install. It is a disaster if you use Windows Search, Cortana, or anything else that has claimed Ctrl+Space. Rebind from <em>Settings - General - Dictation hotkey</em>. Common rebinds: <code>Win+Space</code>, <code>F8</code>, the right Ctrl key alone.
+          </p>
+
+          <p>Full details on hotkey conflicts and resolution in <a href="/blog/posts/customizing-the-dictation-hotkey.html">the hotkey customization post</a>.</p>
+
+          <h3>2. Auto Cleanup tier</h3>
+
+          <p>
+            Raw Whisper output is usable but quirky. The Auto Cleanup pipeline runs the transcript through a small local LLM with a tightly-scoped prompt to fix punctuation, capitalization, and obvious filler ("uh", "um", repeated words). It runs entirely on your machine - no network call.
+          </p>
+
+          <p>Tiers:</p>
+
+          <ul>
+            <li><strong>Off</strong> - raw Whisper, fastest, occasionally rough.</li>
+            <li><strong>Light</strong> - punctuation and capitalization only. Recommended for technical dictation where the LLM might second-guess your code.</li>
+            <li><strong>Medium</strong> (default) - light cleanup plus filler removal. The sweet spot for most users.</li>
+            <li><strong>High</strong> - full rewrite for tone consistency. Best for long-form prose, slightly slower.</li>
+          </ul>
+
+          <p>Change it from <em>Settings - Cleanup</em>. You can switch on a per-Transform basis if you want different cleanup for different workflows.</p>
+
+          <h3>3. The microphone</h3>
+
+          <p>
+            OpenVoice auto-picks your system default microphone. If you have multiple mics - a USB condenser for streaming and the built-in laptop mic for everything else - open <em>Settings - Audio - Input device</em> and pick the one you actually want. The change applies immediately; no restart needed.
+          </p>
+
+          <p>
+            <strong>Pro tip:</strong> if dictation quality is uneven, the mic is usually the variable. A $40 USB lavalier outperforms a $400 webcam mic for speech-to-text accuracy almost every time.
+          </p>
+
+          <h2>That's it</h2>
+
+          <p>
+            You're now set up with locally-running voice dictation that works in every text field on the system. No subscription, no account, no network. Speak, release, watch it paste.
+          </p>
+
+          <p>
+            If anything went sideways, check <a href="https://github.com/Razepriv/openwhisper/issues" rel="noopener">the issues tracker</a> - most install problems are either SmartScreen confusion or a stale WebView2 install (Windows ships it; if yours is from 2022, run Windows Update and try again).
+          </p>
+
+          <div class="cta-box">
+            <h3 class="cta-box-title">Get OpenVoice for Windows</h3>
+            <p class="cta-box-dek">Free, open-source, runs entirely on your hardware. ~85 MB download, no account required.</p>
+            <a class="btn btn-primary btn-lg" href="/#download">Download for Windows</a>
+          </div>
+
+          <p>
+            Tomorrow's post compares OpenVoice to Wispr Flow - what each one is good at, what each one charges, and the trade-offs that matter for real users.
+          </p>
+        </div>
+
+        <section class="related">
+          <div class="related-label">Read next</div>
+          <div class="related-grid">
+            <a class="related-card" href="/blog/posts/openvoice-vs-wispr-flow.html">
+              <div class="related-card-kicker">Day 2 &middot; vs</div>
+              <h3 class="related-card-title">OpenVoice vs Wispr Flow: a feature-by-feature comparison</h3>
+            </a>
+            <a class="related-card" href="/blog/posts/customizing-the-dictation-hotkey.html">
+              <div class="related-card-kicker">Day 13 &middot; Tutorial</div>
+              <h3 class="related-card-title">Rebinding your dictation hotkey without breaking anything</h3>
+            </a>
+            <a class="related-card" href="/blog/posts/introducing-openvoice.html">
+              <div class="related-card-kicker">Day 0 &middot; Launch</div>
+              <h3 class="related-card-title">Introducing OpenVoice</h3>
+            </a>
+          </div>
+        </section>
+      </article>
+    </main>
+
+    <footer class="colophon">
+      <div class="colophon-rule"></div>
+      <div class="colophon-grid">
+        <div>
+          <div class="colophon-label">OpenVoice</div>
+          <p>100% local, 100% free voice dictation for Mac, Windows, and Linux. <a href="/">Back to the home page</a>.</p>
+        </div>
+        <div>
+          <div class="colophon-label">Subscribe</div>
+          <p>New posts daily for 30 days. Get them in your reader via <a href="/blog/feed.xml">RSS</a>.</p>
+        </div>
+        <div>
+          <div class="colophon-label">Lineage</div>
+          <p>Forked from <a href="https://github.com/cjpais/Handy" rel="noopener">cjpais/Handy</a> (MIT). Built on whisper.cpp, llama.cpp, and Tauri.</p>
+        </div>
+        <div>
+          <div class="colophon-label">Find us</div>
+          <p>
+            <a href="https://github.com/Razepriv/openwhisper" rel="noopener">GitHub</a> &middot;
+            <a href="https://github.com/Razepriv/openwhisper/releases" rel="noopener">Releases</a> &middot;
+            <a href="/blog/feed.xml">RSS</a>
+          </p>
+        </div>
+      </div>
+      <div class="colophon-bottom">
+        <span>&copy; <span id="year">2026</span> OpenVoice contributors</span>
+        <span>No telemetry. No tracking. No cookies on this page.</span>
+      </div>
+    </footer>
+
+    <script src="/script.js" defer></script>
+  </body>
+</html>

@@ -93,6 +93,65 @@ async changeOverlayPositionSetting(position: string) : Promise<Result<null, stri
     else return { status: "error", error: e  as any };
 }
 },
+/**
+ * OpenWhisper Phase UI.batch — toggle the persistent floating widget.
+ * When enabled, the recording overlay stays on-screen in an "idle"
+ * clickable state between dictations (Wispr Flow's Flow Bar pattern).
+ * Disabling falls back to the legacy show-only-during-recording flow.
+ */
+async changeFloatingWidgetEnabledSetting(enabled: boolean) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_floating_widget_enabled_setting", { enabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * OpenWhisper Phase UI.batch — set the floating widget's idle-state
+ * opacity. The backend clamps to [0.2, 1.0] to keep the widget
+ * visible (0.0 would make it disappear and confuse users). The
+ * updated value is pushed to the overlay window immediately via the
+ * `overlay-config` event so the user sees the change without
+ * re-triggering a dictation.
+ */
+async changeFloatingWidgetOpacitySetting(opacity: number) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_floating_widget_opacity_setting", { opacity }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * handy Phase Final.UI — persist the user's theme preference
+ * ("system" / "light" / "dark"). The `<html data-theme>` swap happens
+ * client-side in `ThemeToggle.tsx` for instant feedback; this command
+ * just writes the persisted choice so `main.tsx::applyPersistedTheme`
+ * can restore it on next launch. Unknown values fall back to System
+ * so a typo in settings.json never breaks the UI.
+ */
+async changeThemeSetting(theme: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_theme_setting", { theme }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * handy — toggle Vibe Coding on/off. When false the
+ * post-transcription IDE/agent rewrite (file-tagging, identifier
+ * backtick-wrap) is skipped regardless of the focused app.
+ */
+async changeVibeCodingEnabledSetting(enabled: boolean) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("change_vibe_coding_enabled_setting", { enabled }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
 async changeDebugModeSetting(enabled: boolean) : Promise<Result<null, string>> {
     try {
     return { status: "ok", data: await TAURI_INVOKE("change_debug_mode_setting", { enabled }) };
@@ -514,6 +573,58 @@ async checkAppleIntelligenceAvailable() : Promise<boolean> {
     return await TAURI_INVOKE("check_apple_intelligence_available");
 },
 /**
+ * OpenWhisper Phase 1.2: snapshot the host system for the BackendResolver
+ * and the zero-touch onboarding wizard. See `system_probe` module docs.
+ */
+async getSystemProfile() : Promise<Result<SystemProfile, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_system_profile") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * OpenWhisper Phase 1.3: compute the recommended STT + LLM cleanup stack
+ * for the host system. Called by the onboarding UI to show "we picked X
+ * for your Y, downloading ~Z MB" before kicking off the model download.
+ * 
+ * `has_capable_gpu` and `ollama_detected` come from runtime probes
+ * (transcribe-rs GPU enumeration and the Ollama auto-detect flow in
+ * Phase 1.8). The command takes them as parameters so the frontend can
+ * surface "without GPU" or "without Ollama" preview stacks before the
+ * runtime probes complete.
+ */
+async getRecommendedStack(hasCapableGpu: boolean, ollamaDetected: boolean) : Promise<Result<Stack, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_recommended_stack", { hasCapableGpu, ollamaDetected }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * OpenWhisper Phase 1.5: kick off the zero-touch first-run flow.
+ * Idempotent — safe to call repeatedly. Emits events the frontend listens
+ * for. See `auto_provisioner` module docs for the event contract.
+ */
+async startAutoProvisioning(hasCapableGpu: boolean, ollamaDetected: boolean) : Promise<Result<AutoProvisionCompleted, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("start_auto_provisioning", { hasCapableGpu, ollamaDetected }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * OpenWhisper Phase 1.8: detect a pre-installed Ollama binary so the
+ * BackendResolver can route LLM cleanup through it instead of the
+ * bundled llama.cpp sidecar.
+ */
+async detectOllama() : Promise<OllamaDetection> {
+    return await TAURI_INVOKE("detect_ollama");
+},
+/**
  * Try to initialize Enigo (keyboard/mouse simulation).
  * On macOS, this will return an error if accessibility permissions are not granted.
  */
@@ -802,10 +913,8 @@ async updateRecordingRetentionPeriod(period: string) : Promise<Result<null, stri
 }
 },
 /**
- * Checks if the Mac is a laptop by detecting battery presence
- * 
- * This uses pmset to check for battery information.
- * Returns true if a battery is detected (laptop), false otherwise (desktop)
+ * Stub implementation for non-macOS platforms
+ * Always returns false since laptop detection is macOS-specific
  */
 async isLaptop() : Promise<Result<boolean, string>> {
     try {
@@ -814,6 +923,251 @@ async isLaptop() : Promise<Result<boolean, string>> {
     if(e instanceof Error) throw e;
     else return { status: "error", error: e  as any };
 }
+},
+/**
+ * Compute the Voice Profile dashboard data from the local history DB.
+ * Pure read — does not mutate any state. Safe to call repeatedly.
+ */
+async getVoiceProfile() : Promise<Result<VoiceProfile, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_voice_profile") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listNotes() : Promise<Result<Note[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_notes") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async getNote(id: string) : Promise<Result<Note, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_note", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async createNote(title: string, body: string) : Promise<Result<Note, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("create_note", { title, body }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async updateNote(id: string, title: string, body: string) : Promise<Result<Note, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_note", { id, title, body }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteNote(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_note", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listSnippets() : Promise<Result<Snippet[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_snippets") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async addSnippet(id: string, trigger: string, expansion: string) : Promise<Result<Snippet, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_snippet", { id, trigger, expansion }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async updateSnippet(id: string, trigger: string, expansion: string) : Promise<Result<Snippet, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_snippet", { id, trigger, expansion }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteSnippet(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_snippet", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Bulk replace the entire snippets list — used by the JSON import
+ * flow in the settings UI. Enforces the documented `MAX_BULK_IMPORT`
+ * cap.
+ */
+async bulkSetSnippets(snippets: Snippet[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("bulk_set_snippets", { snippets }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listDictionaryEntries() : Promise<Result<DictionaryEntry[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_dictionary_entries") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async addDictionaryEntry(input: DictionaryEntryInput) : Promise<Result<DictionaryEntry, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_dictionary_entry", { input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async updateDictionaryEntry(term: string, input: DictionaryEntryInput) : Promise<Result<DictionaryEntry, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_dictionary_entry", { term, input }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteDictionaryEntry(term: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_dictionary_entry", { term }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Bulk replace the entire dictionary — used by the JSON import flow.
+ * Matches the snippets cap of `MAX_BULK_IMPORT` entries.
+ */
+async bulkSetDictionaryEntries(entries: DictionaryEntryInput[]) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("bulk_set_dictionary_entries", { entries }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async listTransforms() : Promise<Result<TransformBinding[], string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("list_transforms") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async addTransform(id: string, name: string, prompt: string, hotkey: string | null) : Promise<Result<TransformBinding, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("add_transform", { id, name, prompt, hotkey }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async updateTransform(id: string, name: string, prompt: string, hotkey: string | null) : Promise<Result<TransformBinding, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("update_transform", { id, name, prompt, hotkey }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+async deleteTransform(id: string) : Promise<Result<null, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("delete_transform", { id }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Render the (system, user) prompt pair for a given transform applied
+ * to the supplied text. Frontend uses this to surface a "preview the
+ * prompt" affordance in the transforms settings page.
+ */
+async previewTransformPrompt(id: string, text: string) : Promise<Result<string, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("preview_transform_prompt", { id, text }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Detect the currently-focused app and apply the Vibe Coding pipeline
+ * to `text`. Frontend can call this for the post-dictation preview
+ * even when Vibe Coding isn't part of the live dictation flow.
+ * 
+ * `known_symbols` should be the identifier list extracted from the
+ * focused editor (queued for the Phase 6.1b accessibility-tree
+ * reader). For now any caller can supply a manual list.
+ */
+async applyVibeCoding(text: string, knownSymbols: string[]) : Promise<Result<VibeCodingResult, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("apply_vibe_coding", { text, knownSymbols }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Light-weight active-app probe exposed to the frontend for the
+ * "what is OpenWhisper looking at" debug panel.
+ */
+async getActiveApp() : Promise<Result<ActiveApp, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("get_active_app") };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Validate a Command Mode (selection, instruction) pair. The frontend
+ * calls this BEFORE dispatching the LLM call so it can show the user
+ * a useful error if the selection is too long or empty. The actual
+ * LLM dispatch goes through the regular post-process pipeline once
+ * validation passes.
+ */
+async prepareCommandMode(selection: string, instruction: string) : Promise<Result<CommandModeRequest, string>> {
+    try {
+    return { status: "ok", data: await TAURI_INVOKE("prepare_command_mode", { selection, instruction }) };
+} catch (e) {
+    if(e instanceof Error) throw e;
+    else return { status: "error", error: e  as any };
+}
+},
+/**
+ * Trigger dictation from a UI affordance — e.g. clicking the floating
+ * widget when it's in its idle state. Equivalent to pressing the
+ * configured push-to-talk shortcut. Idempotent — if a dictation is
+ * already in flight, the coordinator collapses the call.
+ * 
+ * handy fix: capture the foreground window's HWND BEFORE the click
+ * shifts focus to our window. The paste path later restores focus
+ * via `focus_capture::take_and_restore()` so the transcribed text
+ * lands in the editor / chat box / form field the user was last in
+ * — not in our own window.
+ */
+async triggerDictationFromWidget() : Promise<void> {
+    await TAURI_INVOKE("trigger_dictation_from_widget");
 }
 }
 
@@ -832,17 +1186,278 @@ historyUpdatePayload: "history-update-payload"
 
 /** user-defined types **/
 
-export type AppSettings = { bindings: Partial<{ [key in string]: ShortcutBinding }>; push_to_talk: boolean; audio_feedback: boolean; audio_feedback_volume?: number; sound_theme?: SoundTheme; start_hidden?: boolean; autostart_enabled?: boolean; update_checks_enabled?: boolean; selected_model?: string; always_on_microphone?: boolean; selected_microphone?: string | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; typing_tool?: TypingTool; external_script_path: string | null; custom_filler_words?: string[] | null; whisper_accelerator?: WhisperAcceleratorSetting; ort_accelerator?: OrtAcceleratorSetting; whisper_gpu_device?: number; extra_recording_buffer_ms?: number }
+/**
+ * Snapshot of the focused application at dictation time.
+ * 
+ * All fields are best-effort — any of them may be empty depending on
+ * the platform's API capabilities. Consumers must handle empty values
+ * gracefully (treat as "no special handling for this app").
+ */
+export type ActiveApp = { 
+/**
+ * Process executable name without path, e.g. `"cursor.exe"`,
+ * `"Code"`, `"firefox"`. Lowercased on Windows for matching
+ * convenience. Empty when probing failed.
+ */
+process_name: string; 
+/**
+ * Foreground window title, exactly as the OS reports it. Useful
+ * for distinguishing "Cursor — file.tsx" from "Cursor — main".
+ */
+window_title: string; 
+/**
+ * Window class / bundle identifier — `WM_CLASS` on X11, bundle id
+ * on macOS (when implemented). Empty on Windows (the concept
+ * doesn't exist there in the same way).
+ */
+window_class: string }
+/**
+ * Coarse buckets the active app falls into. Matched by simple
+ * substring inspection of `ActiveApp::matchable()`.
+ */
+export type AppCategory = 
+/**
+ * Gmail desktop client, Outlook, Apple Mail, Thunderbird, etc.
+ */
+"email" | 
+/**
+ * Slack, Discord, Teams, Telegram, Messenger, WhatsApp, etc.
+ */
+"chat" | 
+/**
+ * IDEs and agent terminals (Cursor, VS Code, JetBrains, Claude
+ * Code, Codex). Note: Vibe Coding ALSO runs on these — the style
+ * preset adds a tone hint on top of file-tagging / backticks.
+ */
+"code" | 
+/**
+ * Word / Google Docs / Notion / Obsidian — long-form writing.
+ */
+"document" | 
+/**
+ * Anything else.
+ */
+"other"
+export type AppSettings = { bindings: Partial<{ [key in string]: ShortcutBinding }>; push_to_talk: boolean; audio_feedback: boolean; audio_feedback_volume?: number; sound_theme?: SoundTheme; start_hidden?: boolean; autostart_enabled?: boolean; update_checks_enabled?: boolean; selected_model?: string; always_on_microphone?: boolean; selected_microphone?: string | null; clamshell_microphone?: string | null; selected_output_device?: string | null; translate_to_english?: boolean; selected_language?: string; overlay_position?: OverlayPosition; 
+/**
+ * OpenWhisper persistent floating widget — when true, the overlay
+ * window stays visible at all times (idle / recording /
+ * transcribing) rather than appearing only mid-dictation. Clicking
+ * the idle widget triggers the same flow as the push-to-talk
+ * hotkey, so it doubles as a no-keyboard activation surface.
+ */
+floating_widget_enabled?: boolean; 
+/**
+ * Floating-widget opacity in [0.2, 1.0]. The lower bound stops a
+ * user from accidentally hiding the widget to invisibility.
+ */
+floating_widget_opacity?: number; debug_mode?: boolean; log_level?: LogLevel; custom_words?: string[]; model_unload_timeout?: ModelUnloadTimeout; word_correction_threshold?: number; history_limit?: number; recording_retention_period?: RecordingRetentionPeriod; paste_method?: PasteMethod; clipboard_handling?: ClipboardHandling; auto_submit?: boolean; auto_submit_key?: AutoSubmitKey; post_process_enabled?: boolean; 
+/**
+ * OpenWhisper Phase 1.9: replaces the binary `post_process_enabled`
+ * flag with a 4-tier picker. Legacy `post_process_enabled` is kept for
+ * backward compatibility — it's read on first migration but never
+ * written; new code should branch on `cleanup_level` instead.
+ * See `CleanupLevel` docs for the tier semantics.
+ */
+cleanup_level?: CleanupLevel; 
+/**
+ * OpenWhisper Phase 2.1: structured Personal Dictionary replacing
+ * the flat `custom_words: Vec<String>`. Migration from `custom_words`
+ * runs lazily in the ModelManager (see managers/dictionary.rs docs).
+ * Empty until the dictionary settings UI lands or the migration runs.
+ */
+dictionary_entries?: DictionaryEntry[]; 
+/**
+ * OpenWhisper Phase 3.1: voice snippets — trigger phrases that expand
+ * to user-defined text after transcription. See managers/snippets.rs
+ * for the data shape + limits.
+ */
+snippets?: Snippet[]; 
+/**
+ * OpenWhisper Phase 7.2: hotkey-bound post-dictation rewrites.
+ * See `transforms.rs` for the data shape. Defaults to the
+ * "Polish" + "Prompt Engineer" pair shipped with every install.
+ */
+transforms?: TransformBinding[]; 
+/**
+ * OpenWhisper Phase Finalize.D — per-app-category style preset
+ * overrides. Empty by default (each category falls back to its
+ * hard-coded default — see `style_presets::AppCategory::default_preset`).
+ * User-edited overrides survive here so the next dictation picks
+ * up the preferred tone automatically.
+ */
+style_overrides?: Partial<{ [key in AppCategory]: StylePreset }>; 
+/**
+ * handy Phase Final.UI — manual theme preference. `System` (default)
+ * honors the OS's `prefers-color-scheme`; `Light` / `Dark` are
+ * explicit user overrides applied as `<html data-theme="...">` by
+ * the React app on every load. Persisted across sessions.
+ */
+theme?: ThemePreference; 
+/**
+ * handy — toggle the Vibe Coding post-dictation rewriter on/off.
+ * When false, transcription is pasted verbatim regardless of the
+ * focused app (no file-tagging, no backtick-wrapping of identifiers).
+ * Default true because the rewrites are non-destructive (file-tag
+ * substitutions are explicit triggers like "tag main.py") and
+ * only activate when the focused app classifies as an IDE / agent
+ * terminal. Users who write code in apps that misclassify can
+ * flip this off.
+ */
+vibe_coding_enabled?: boolean; post_process_provider_id?: string; post_process_providers?: PostProcessProvider[]; post_process_api_keys?: SecretMap; post_process_models?: Partial<{ [key in string]: string }>; post_process_prompts?: LLMPrompt[]; post_process_selected_prompt_id?: string | null; mute_while_recording?: boolean; append_trailing_space?: boolean; app_language?: string; experimental_enabled?: boolean; lazy_stream_close?: boolean; keyboard_implementation?: KeyboardImplementation; show_tray_icon?: boolean; paste_delay_ms?: number; typing_tool?: TypingTool; external_script_path: string | null; custom_filler_words?: string[] | null; whisper_accelerator?: WhisperAcceleratorSetting; ort_accelerator?: OrtAcceleratorSetting; whisper_gpu_device?: number; extra_recording_buffer_ms?: number }
 export type AudioDevice = { index: string; name: string; is_default: boolean }
+export type AutoProvisionCompleted = { 
+/**
+ * Id of the STT model that's now active.
+ */
+active_model_id: string }
 export type AutoSubmitKey = "enter" | "ctrl_enter" | "cmd_enter"
 export type AvailableAccelerators = { whisper: string[]; ort: string[]; gpu_devices: GpuDeviceOption[] }
 export type BindingResponse = { success: boolean; binding: ShortcutBinding | null; error: string | null }
+/**
+ * Which LLM-cleanup backend to route to. The order in this enum reflects
+ * preference: try Apple FM first if available, then Phi Silica, then Ollama,
+ * then the bundled llama.cpp sidecar, then nothing.
+ */
+export type CleanupBackend = 
+/**
+ * macOS 26+ on Apple Silicon. OS-provided, zero disk cost, ~50 ms cleanup.
+ */
+"AppleFM" | 
+/**
+ * Windows 11 24H2+ on Copilot+ NPU. OS-provided, zero disk cost.
+ */
+"PhiSilica" | 
+/**
+ * User has Ollama pre-installed. Use it as an upgrade path over the
+ * bundled sidecar (more models, better perf if user has it tuned).
+ */
+"Ollama" | 
+/**
+ * OpenWhisper-bundled `llama-server` child process. Default for systems
+ * without an OS-native LLM.
+ */
+"LlamaSidecar" | 
+/**
+ * No LLM cleanup. Raw Whisper transcription only. Tier Z fallback.
+ */
+"None"
+/**
+ * OpenWhisper Phase 1.9: how aggressively the LLM cleanup pass should
+ * rewrite the raw transcription. Wispr Flow exposes the same 4 tiers in
+ * its Auto Cleanup setting. Higher tiers ask the model to do more — fix
+ * grammar, restructure sentences, remove every filler word — at the cost
+ * of more latency (and a slightly higher chance of altering meaning).
+ * 
+ * Defaults to `Light` because that's the sweet spot for dictation users:
+ * the obvious fixes (period at end, capital at start, "uhh" removed) with
+ * none of the heavy rewriting that destroys nuance.
+ * 
+ * Mapped to the `system_prompt_for_cleanup_level()` function which returns
+ * the actual prompt sent to the LLM. Keep them in sync.
+ */
+export type CleanupLevel = 
+/**
+ * Bypass the LLM entirely. Raw Whisper output is what the user sees.
+ */
+"none" | 
+/**
+ * Punctuation + capitalisation only. No filler removal, no rewriting.
+ */
+"light" | 
+/**
+ * Adds filler-word removal and light grammar tidying.
+ */
+"medium" | 
+/**
+ * Aggressively restructures sentences for clarity. Best for
+ * long-form dictation; risky for short chat messages.
+ */
+"high"
 export type ClipboardHandling = "dont_modify" | "copy_to_clipboard"
+/**
+ * Validated inputs to a Command Mode rewrite request.
+ * 
+ * Construct with `prepare(selection, instruction)` rather than
+ * directly — the constructor runs the word-cap + emptiness checks.
+ */
+export type CommandModeRequest = { selection: string; instruction: string }
 export type CustomSounds = { start: boolean; stop: boolean }
+export type DailyWordCount = { 
+/**
+ * ISO-8601 calendar date in the user's local timezone (YYYY-MM-DD).
+ */
+date: string; words: number }
+/**
+ * Structured dictionary entry. Mirrors the Wispr Flow shape closely
+ * enough to make the UI work straightforward.
+ * 
+ * `term` is what the user wants Whisper to recognise. `replacement` is
+ * the optional canonical form Flow substitutes after transcription when
+ * the heard text matches `term` fuzzily. For pure ASR-bias entries
+ * `replacement` is `None`.
+ */
+export type DictionaryEntry = { 
+/**
+ * The term as Whisper should recognise / produce it (e.g. "Sarbanes-Oxley").
+ */
+term: string; 
+/**
+ * Optional canonical replacement applied as a post-transcription
+ * substitution when Whisper produces a fuzzy match for the term.
+ * `None` means "use the term as-is" — biasing only.
+ */
+replacement?: string | null; 
+/**
+ * Starred entries get priority in the bias-prompt assembly when the
+ * dictionary exceeds the Whisper prompt budget.
+ */
+starred?: boolean; 
+/**
+ * Where this entry came from. Read-only metadata.
+ */
+source?: DictionaryEntrySource }
+export type DictionaryEntryInput = { term: string; replacement?: string | null; starred?: boolean }
+/**
+ * Where this dictionary entry came from. Drives UX hints in the settings
+ * table ("auto-learned from your corrections") and is used by analytics
+ * in a future Insights phase.
+ */
+export type DictionaryEntrySource = 
+/**
+ * User typed it into the dictionary settings UI.
+ */
+"manual" | 
+/**
+ * Promoted from `custom_words: Vec<String>` by the migration step.
+ */
+"migrated" | 
+/**
+ * Auto-learned from a user correction of a previous transcription.
+ * (Implementation lands in a later phase.)
+ */
+"learned" | 
+/**
+ * Imported from a JSON file (bulk import).
+ */
+"imported"
 export type EngineType = "Whisper" | "Parakeet" | "Moonshine" | "MoonshineStreaming" | "SenseVoice" | "GigaAM" | "Canary" | "Cohere"
-export type GpuDeviceOption = { id: number; name: string; total_vram_mb: number; kind: string }
+export type GpuDeviceOption = { id: number; name: string; total_vram_mb: number; 
+/**
+ * `"dedicated"` for discrete cards (NVIDIA / AMD GPUs with their own
+ * VRAM), `"integrated"` for iGPUs that share system RAM. Surfaced so
+ * the frontend can sort dedicated GPUs first and tag the dedicated
+ * one as "Recommended" — Wispr-parity behaviour for laptops where
+ * the integrated GPU shows up first in raw enumeration order.
+ */
+kind: string }
 export type HistoryEntry = { id: number; file_name: string; timestamp: number; saved: boolean; title: string; transcription_text: string; post_processed_text: string | null; post_process_prompt: string | null; post_process_requested: boolean }
 export type HistoryUpdatePayload = { action: "added"; entry: HistoryEntry } | { action: "updated"; entry: HistoryEntry } | { action: "deleted"; id: number } | { action: "toggled"; id: number }
+export type HourlyWordCount = { 
+/**
+ * 0..=23, hour-of-day in the user's local timezone.
+ */
+hour: number; words: number }
 /**
  * Result of changing keyboard implementation
  */
@@ -854,9 +1469,54 @@ reset_bindings: string[] }
 export type KeyboardImplementation = "tauri" | "handy_keys"
 export type LLMPrompt = { id: string; name: string; prompt: string }
 export type LogLevel = "trace" | "debug" | "info" | "warn" | "error"
-export type ModelInfo = { id: string; name: string; description: string; filename: string; url: string | null; sha256: string | null; size_mb: number; is_downloaded: boolean; is_downloading: boolean; partial_size: number; is_directory: boolean; engine_type: EngineType; accuracy_score: number; speed_score: number; supports_translation: boolean; is_recommended: boolean; supported_languages: string[]; supports_language_selection: boolean; is_custom: boolean }
+export type ModelInfo = { id: string; name: string; description: string; filename: string; url: string | null; sha256: string | null; size_mb: number; is_downloaded: boolean; is_downloading: boolean; partial_size: number; is_directory: boolean; engine_type: EngineType; accuracy_score: number; speed_score: number; supports_translation: boolean; is_recommended: boolean; supported_languages: string[]; supports_language_selection: boolean; is_custom: boolean; 
+/**
+ * Quantization scheme of the model file (e.g. "f16", "q5_0", "q4_K_M", "int8").
+ * `None` for custom user models with unknown quantization.
+ */
+quant?: string | null; 
+/**
+ * Which auto-provisioning tiers (S/A/B/C/D/E/F/G/H/Z) recommend this model.
+ * See research/09-auto-provisioning.md §BackendResolver decision matrix.
+ * Empty for models that are user-pickable but not auto-recommended.
+ */
+tier_recommendation?: string[]; 
+/**
+ * True if the model only runs on GPU (will be hidden on CPU-only systems).
+ */
+requires_gpu?: boolean; 
+/**
+ * True if the model only runs on an NPU (Apple Neural Engine / Snapdragon X / etc.).
+ */
+requires_npu?: boolean }
 export type ModelLoadStatus = { is_loaded: boolean; current_model: string | null }
 export type ModelUnloadTimeout = "never" | "immediately" | "min_2" | "min_5" | "min_10" | "min_15" | "hour_1" | "sec_15"
+export type Note = { id: string; title: string; 
+/**
+ * Markdown body. Renderers (frontend) decide how to display it.
+ */
+body: string; 
+/**
+ * Unix-seconds creation timestamp.
+ */
+created_at: number; 
+/**
+ * Unix-seconds last-modified timestamp.
+ */
+updated_at: number }
+/**
+ * Result of an Ollama detection probe.
+ */
+export type OllamaDetection = { 
+/**
+ * True if Ollama appears to be installed on this machine.
+ */
+installed: boolean; 
+/**
+ * Absolute path to the Ollama binary we found, if any. Useful for the
+ * frontend "Detected at: ..." disclosure in Settings.
+ */
+binary_path: string | null }
 export type OrtAcceleratorSetting = "auto" | "cpu" | "cuda" | "directml" | "rocm"
 export type OverlayPosition = "none" | "top" | "bottom"
 export type PaginatedHistory = { entries: HistoryEntry[]; has_more: boolean }
@@ -866,8 +1526,310 @@ export type PostProcessProvider = { id: string; label: string; base_url: string;
 export type RecordingRetentionPeriod = "never" | "preserve_limit" | "days_3" | "weeks_2" | "months_3"
 export type SecretMap = Partial<{ [key in string]: string }>
 export type ShortcutBinding = { id: string; name: string; description: string; default_binding: string; current_binding: string }
+/**
+ * A single user-defined snippet.
+ */
+export type Snippet = { 
+/**
+ * Stable identifier (UUID v4 in production; tests can use any string).
+ */
+id: string; 
+/**
+ * The trigger phrase to match in the transcription. Compared
+ * case-insensitively.
+ */
+trigger: string; 
+/**
+ * The text inserted in place of the trigger.
+ */
+expansion: string; 
+/**
+ * When true, expansion is inserted verbatim (no automatic casing
+ * adjustment). Default is true to match Wispr Flow.
+ */
+casing_preserve?: boolean }
 export type SoundTheme = "marimba" | "pop" | "custom"
+/**
+ * The resolved stack for the host system.
+ * 
+ * Frontend onboarding UI reads this to show the user what's about to be
+ * downloaded ("we picked Whisper Turbo for your M3 Pro, ~620 MB").
+ */
+export type Stack = { 
+/**
+ * Which provisioning tier the host falls into.
+ */
+tier: Tier; 
+/**
+ * `id` of the STT model entry in `models_manifest.json` that the resolver
+ * recommends downloading on first run.
+ */
+stt_model_id: string; 
+/**
+ * Which LLM cleanup backend to wire up for the post-process pass.
+ */
+cleanup_backend: CleanupBackend; 
+/**
+ * Estimated total disk footprint after auto-provisioning completes.
+ * Used by the onboarding UI to show "Downloading ~3.2 GB" before
+ * committing to the download.
+ */
+estimated_download_mb: number; 
+/**
+ * Human-readable summary, e.g. "Whisper Turbo + Apple Foundation Models".
+ * The frontend can localise the formatting but the model names are stable.
+ */
+summary: string }
+/**
+ * The styling buckets we ship. Wispr-flow-compatible — same labels,
+ * same semantic intent, mapped to local-LLM prompt fragments.
+ */
+export type StylePreset = 
+/**
+ * "Polite, complete sentences, no contractions." Default for
+ * email + document apps.
+ */
+"formal" | 
+/**
+ * "Natural conversational tone, contractions OK, no formal
+ * salutations." Default for chat apps.
+ */
+"casual" | 
+/**
+ * "Loose, conversational, abbreviations OK." Default off — opt-in
+ * for users who actively want it.
+ */
+"very_casual" | 
+/**
+ * "Concise + technical. Preserve code-y terms verbatim." Default
+ * for IDEs and agent terminals (alongside Vibe Coding).
+ */
+"concise" | 
+/**
+ * "Standard cleanup — fix punctuation and grammar; leave tone
+ * alone." This is the no-personality default for anything that
+ * doesn't match a known category.
+ */
+"neutral"
+/**
+ * A snapshot of the host system, computed once at startup, consumed by the
+ * BackendResolver to pick an STT model + LLM cleanup backend.
+ * 
+ * All fields are `pub` so the resolver can pattern-match cleanly. The struct
+ * derives `Type` so a TypeScript binding is auto-generated by tauri-specta.
+ */
+export type SystemProfile = { 
+/**
+ * `"macos"`, `"windows"`, `"linux"`, or another value from
+ * `std::env::consts::OS`.
+ */
+os_family: string; 
+/**
+ * Best-effort OS version string, e.g. `"15.2"` on macOS, `"10.0.22631"`
+ * on Windows 11, kernel version on Linux. `None` if the platform query
+ * failed.
+ */
+os_version: string | null; 
+/**
+ * `"x86_64"`, `"aarch64"`, etc. (from `std::env::consts::ARCH`).
+ */
+cpu_arch: string; 
+/**
+ * Vendor + model string, e.g. `"Apple M3 Pro"`, `"AMD Ryzen 9 7950X"`,
+ * `"Intel(R) Core(TM) i7-12700K"`. Empty string if the probe failed.
+ */
+cpu_brand: string; 
+/**
+ * Physical core count. Falls back to logical core count if physical isn't
+ * available.
+ */
+cpu_cores: number; 
+/**
+ * Total system RAM in megabytes.
+ */
+ram_total_mb: number; 
+/**
+ * Available (free + cacheable) RAM in megabytes at probe time.
+ */
+ram_available_mb: number; 
+/**
+ * Free disk space on the partition that hosts the OS user data directory,
+ * in megabytes. `None` if no disk was identified.
+ */
+disk_free_mb: number | null; 
+/**
+ * True if the CPU is an Apple Silicon chip (M1/M2/M3/M4/...) which
+ * implies the Apple Neural Engine is present.
+ */
+has_apple_neural_engine: boolean; 
+/**
+ * True if the system is detected as a Windows Copilot+ PC with a Qualcomm
+ * Hexagon / Intel AI Boost / AMD XDNA NPU. Best-effort detection — see
+ * `windows_has_npu()` for the heuristic.
+ */
+has_windows_npu: boolean; 
+/**
+ * User locale string, e.g. `"en-US"`, `"fr-FR"`. Empty if the platform
+ * API failed.
+ */
+locale: string }
+/**
+ * handy Phase Final.UI — user-selected theme override.
+ * 
+ * `System` (default) follows the OS's `prefers-color-scheme` media query.
+ * `Light` and `Dark` are explicit overrides applied as a
+ * `<html data-theme="...">` attribute by `main.tsx` on every load.
+ */
+export type ThemePreference = "system" | "light" | "dark"
+/**
+ * Provisioning tier. Each tier maps to a single [`Stack`] in [`resolve`].
+ * Ordering is "highest capability first" by convention; do not rely on it for
+ * numeric comparisons.
+ */
+export type Tier = 
+/**
+ * Apple Silicon M3+, ≥16 GB RAM, macOS 26+. Uses Apple Foundation Models
+ * (zero-disk LLM) and WhisperKit Turbo on the Neural Engine.
+ */
+"S" | 
+/**
+ * Apple Silicon (any M-series), 8–16 GB RAM. Uses whisper.cpp + Metal +
+ * Large-v3 Turbo with a bundled llama.cpp cleanup sidecar.
+ */
+"A" | 
+/**
+ * Intel Mac, ≥8 GB RAM. Whisper Medium + bundled llama.cpp.
+ */
+"B" | 
+/**
+ * Win 11 24H2+ on a Copilot+ NPU machine. Whisper Turbo (Vulkan) + Phi
+ * Silica via Windows AI APIs (zero-disk LLM).
+ */
+"C" | 
+/**
+ * Windows + discrete NVIDIA GPU, ≥8 GB RAM. Whisper Turbo (CUDA) +
+ * bundled llama.cpp with Gemma 3 4B.
+ */
+"D" | 
+/**
+ * Windows + AMD/Intel GPU, ≥8 GB RAM. Whisper Medium (Vulkan) + bundled
+ * llama.cpp with Phi-4 mini.
+ */
+"E" | 
+/**
+ * Windows CPU-only, ≥8 GB RAM. Whisper Small + bundled llama.cpp with
+ * Llama 3.2 3B.
+ */
+"F" | 
+/**
+ * Linux + NVIDIA CUDA. Mirror of D.
+ */
+"G" | 
+/**
+ * Linux CPU / AMD / Intel. Mirror of E/F.
+ */
+"H" | 
+/**
+ * Low-spec fallback (< 8 GB RAM or insufficient disk). Moonshine Tiny,
+ * no LLM cleanup. Works on anything.
+ */
+"Z"
+export type TopWord = { word: string; count: number }
+/**
+ * A single user-defined transform.
+ */
+export type TransformBinding = { 
+/**
+ * Stable identifier (UUID in production; tests use any string).
+ */
+id: string; 
+/**
+ * Display name shown in the settings UI ("Polish", "Make casual",
+ * "Convert to bullet points", etc.).
+ */
+name: string; 
+/**
+ * The prompt body. May reference `{TEXT}` as the placeholder for
+ * the dictated text — `apply_template` substitutes it. When the
+ * placeholder is absent the dictated text is appended at the end
+ * after a blank line.
+ */
+prompt: string; 
+/**
+ * Optional global shortcut. `None` means the transform exists in
+ * the library but can't be triggered from a hotkey (only from a
+ * menu / future tray submenu). The string format is the same as
+ * Handy's `current_binding` field — interpreted by the hotkey
+ * layer, not by this module.
+ */
+hotkey?: string | null }
 export type TypingTool = "auto" | "wtype" | "kwtype" | "dotool" | "ydotool" | "xdotool"
+export type VibeCodingResult = { 
+/**
+ * Transformed text after file-tagging + variable-recognition passes.
+ */
+text: string; 
+/**
+ * Which active-app classification the resolver picked.
+ */
+context: VibeContext }
+/**
+ * Which Vibe Coding mode applies to the currently-focused app.
+ */
+export type VibeContext = 
+/**
+ * Cursor / VS Code / Windsurf / JetBrains — full treatment.
+ */
+"GraphicalIde" | 
+/**
+ * Claude Code / Codex / generic shell running a coding agent.
+ * File tagging applies; backtick wrapping does not.
+ */
+"AgentTerminal" | 
+/**
+ * Not a coding environment — Vibe Coding is a no-op.
+ */
+"None"
+/**
+ * Voice Profile snapshot returned to the frontend dashboard.
+ */
+export type VoiceProfile = { 
+/**
+ * Total words dictated, all-time.
+ */
+total_words: number; 
+/**
+ * Number of recorded dictation sessions.
+ */
+total_sessions: number; 
+/**
+ * Estimated words per minute, averaged across sessions.
+ * `None` when there are no sessions.
+ */
+estimated_wpm: number | null; 
+/**
+ * Top N most-frequent dictated words (lowercase, stop-words
+ * removed, sorted by frequency descending). Length ≤ `TOP_N`.
+ */
+top_words: TopWord[]; 
+/**
+ * Per-day word totals for the trailing 30 days (most recent
+ * first). Used to render the streak heatmap.
+ */
+daily_word_counts: DailyWordCount[]; 
+/**
+ * Hour-of-day buckets (0–23) with cumulative word totals.
+ * Used to render "you dictate most at 9am" style insights.
+ */
+hourly_word_counts: HourlyWordCount[]; 
+/**
+ * Current consecutive-day dictation streak ending today.
+ */
+current_streak_days: number; 
+/**
+ * Longest consecutive-day streak ever recorded.
+ */
+longest_streak_days: number }
 export type WhisperAcceleratorSetting = "auto" | "cpu" | "gpu"
 export type WindowsMicrophonePermissionStatus = { supported: boolean; overall_access: PermissionAccess; device_access: PermissionAccess; app_access: PermissionAccess; desktop_app_access: PermissionAccess }
 

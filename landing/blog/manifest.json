@@ -1,0 +1,577 @@
+{
+    "$comment":  "Single source of truth for the OpenVoice blog. The blog index reads this at runtime and filters by `published \u003c= today`. Stub posts ship with `draft: true` so they\u0027re hidden until their daily-publish workflow flips the flag. Edit a post: open posts/\u003cslug\u003e.html, edit, commit, vercel --prod. Add a new post: append here + create posts/\u003cslug\u003e.html.",
+    "site":  {
+                 "title":  "OpenVoice Dispatch",
+                 "dek":  "Notes on local-first voice dictation, vibe coding, and the trade-offs of running speech-to-text on your own machine instead of someone else\u0027s.",
+                 "baseUrl":  "https://handy.apexaios.io/blog",
+                 "feedUrl":  "https://handy.apexaios.io/blog/feed.xml",
+                 "author":  "The OpenVoice maintainers"
+             },
+    "categories":  {
+                       "launch":  {
+                                      "label":  "Launch",
+                                      "color":  "violet"
+                                  },
+                       "vs":  {
+                                  "label":  "vs",
+                                  "color":  "amber"
+                              },
+                       "tutorial":  {
+                                        "label":  "Tutorial",
+                                        "color":  "emerald"
+                                    },
+                       "usecase":  {
+                                       "label":  "Use case",
+                                       "color":  "sky"
+                                   },
+                       "technical":  {
+                                         "label":  "Under the hood",
+                                         "color":  "slate"
+                                     },
+                       "privacy":  {
+                                       "label":  "Privacy",
+                                       "color":  "rose"
+                                   },
+                       "roadmap":  {
+                                       "label":  "Roadmap",
+                                       "color":  "indigo"
+                                   }
+                   },
+    "posts":  [
+                  {
+                      "day":  0,
+                      "publish":  "2026-06-11",
+                      "slug":  "introducing-openvoice",
+                      "title":  "Introducing OpenVoice: voice dictation that stays on your machine",
+                      "dek":  "Wispr-Flow-class dictation for Mac, Windows, and Linux. Free, open-source, runs entirely on your hardware. Here\u0027s what shipped and why we built it.",
+                      "category":  "launch",
+                      "keyword":  "OpenVoice voice dictation",
+                      "intent":  "branded / informational",
+                      "readMinutes":  7,
+                      "draft":  false,
+                      "tags":  [
+                                   "launch",
+                                   "v0.2.0",
+                                   "wispr-flow-alternative"
+                               ]
+                  },
+                  {
+                      "day":  1,
+                      "publish":  "2026-06-12",
+                      "slug":  "windows-quickstart",
+                      "title":  "Installing OpenVoice on Windows in under 5 minutes",
+                      "dek":  "Download the installer, dismiss the one-time SmartScreen prompt, set your hotkey, dictate. Annotated screenshots and the only three settings worth touching on day one.",
+                      "category":  "tutorial",
+                      "keyword":  "OpenVoice Windows install",
+                      "intent":  "navigational / informational",
+                      "readMinutes":  5,
+                      "draft":  false,
+                      "tags":  [
+                                   "windows",
+                                   "install",
+                                   "quickstart"
+                               ]
+                  },
+                  {
+                      "day":  2,
+                      "publish":  "2026-06-13",
+                      "slug":  "openvoice-vs-wispr-flow",
+                      "title":  "OpenVoice vs Wispr Flow: a feature-by-feature comparison",
+                      "dek":  "Wispr Flow runs on someone else\u0027s servers and costs $12â€“15/mo. OpenVoice runs on your laptop and costs $0. We line up the features, the limits, and the actual trade-offs.",
+                      "category":  "vs",
+                      "keyword":  "Wispr Flow alternative free",
+                      "intent":  "commercial investigation",
+                      "readMinutes":  9,
+                      "draft":  false,
+                      "tags":  [
+                                   "comparison",
+                                   "wispr-flow",
+                                   "alternatives"
+                               ]
+                  },
+                  {
+                      "day":  3,
+                      "publish":  "2026-06-14",
+                      "slug":  "why-whisper-tiny-ships-in-the-installer",
+                      "title":  "Why we ship Whisper Tiny inside the installer (and what that means for privacy)",
+                      "dek":  "Most local-first apps make you download the model on first launch. We bundled the smallest one. Here\u0027s why a 75 MB add to the installer is the privacy choice â€” and what changes when you upgrade to Small.",
+                      "category":  "technical",
+                      "keyword":  "local whisper desktop app",
+                      "intent":  "informational",
+                      "readMinutes":  8,
+                      "draft":  false,
+                      "tags":  [
+                                   "whisper",
+                                   "privacy",
+                                   "models"
+                               ]
+                  },
+                  {
+                      "day":  4,
+                      "publish":  "2026-06-15",
+                      "slug":  "vibe-coding-cursor-claude-code",
+                      "title":  "Vibe Coding in Cursor and Claude Code: dictating prompts that don\u0027t need editing",
+                      "dek":  "When OpenVoice detects you\u0027re in an IDE or coding-agent terminal, dictation rewrites the output for code: file names become @tags, identifiers get backtick-wrapped. Here\u0027s how to make it sing.",
+                      "category":  "usecase",
+                      "keyword":  "voice dictation for coding",
+                      "intent":  "informational / commercial",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "vibe-coding",
+                                   "cursor",
+                                   "claude-code",
+                                   "ide"
+                               ]
+                  },
+                  {
+                      "day":  5,
+                      "publish":  "2026-06-16",
+                      "slug":  "macos-quickstart",
+                      "title":  "Installing OpenVoice on macOS in under 5 minutes (Apple Silicon + Intel)",
+                      "dek":  "The Gatekeeper flow, the Metal acceleration toggle, and the one accessibility permission that makes dictation actually paste.",
+                      "category":  "tutorial",
+                      "keyword":  "OpenVoice macOS install",
+                      "intent":  "navigational",
+                      "readMinutes":  5,
+                      "draft":  true,
+                      "tags":  [
+                                   "macos",
+                                   "install",
+                                   "quickstart"
+                               ]
+                  },
+                  {
+                      "day":  6,
+                      "publish":  "2026-06-17",
+                      "slug":  "global-hotkeys-explained",
+                      "title":  "How global dictation hotkeys actually work (and why yours sometimes don\u0027t)",
+                      "dek":  "rdev, handy-keys, Windows low-level hooks, Wayland\u0027s locked-down protocols. The architecture behind \"hold âŒƒSpace anywhere\" â€” and the three common failure modes.",
+                      "category":  "technical",
+                      "keyword":  "global hotkey dictation",
+                      "intent":  "informational",
+                      "readMinutes":  8,
+                      "draft":  true,
+                      "tags":  [
+                                   "hotkeys",
+                                   "rdev",
+                                   "input"
+                               ]
+                  },
+                  {
+                      "day":  7,
+                      "publish":  "2026-06-18",
+                      "slug":  "how-whisper-cpp-powers-everything",
+                      "title":  "How whisper.cpp turns 75 MB of weights into your transcript",
+                      "dek":  "Vulkan on Windows, Metal on Mac, CUDA on Linux when available. A non-academic tour of how the model file you downloaded actually does the work.",
+                      "category":  "technical",
+                      "keyword":  "whisper.cpp explained",
+                      "intent":  "informational",
+                      "readMinutes":  11,
+                      "draft":  true,
+                      "tags":  [
+                                   "whisper.cpp",
+                                   "ggml",
+                                   "internals"
+                               ]
+                  },
+                  {
+                      "day":  8,
+                      "publish":  "2026-06-19",
+                      "slug":  "openvoice-vs-dragon",
+                      "title":  "OpenVoice vs Dragon NaturallySpeaking: 30 years later, what changed",
+                      "dek":  "Dragon costs $700 and runs only on Windows. OpenVoice costs zero and runs everywhere. We compare accuracy, vocabulary training, professional workflows, and the trade-offs nobody talks about.",
+                      "category":  "vs",
+                      "keyword":  "Dragon Naturally Speaking alternative",
+                      "intent":  "commercial investigation",
+                      "readMinutes":  10,
+                      "draft":  true,
+                      "tags":  [
+                                   "comparison",
+                                   "dragon",
+                                   "alternatives"
+                               ]
+                  },
+                  {
+                      "day":  9,
+                      "publish":  "2026-06-20",
+                      "slug":  "linux-quickstart",
+                      "title":  "Installing OpenVoice on Linux: Ubuntu, Fedora, Arch, and the Wayland caveat",
+                      "dek":  ".deb, .rpm, AppImage, GTK layer-shell. Plus what works under XWayland and what\u0027s coming for pure-Wayland sessions.",
+                      "category":  "tutorial",
+                      "keyword":  "OpenVoice Linux install",
+                      "intent":  "navigational / technical",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "linux",
+                                   "install",
+                                   "wayland"
+                               ]
+                  },
+                  {
+                      "day":  10,
+                      "publish":  "2026-06-21",
+                      "slug":  "dictating-long-form-writing",
+                      "title":  "Dictating a 3,000-word essay: how OpenVoice changed my writing workflow",
+                      "dek":  "First-person notes from drafting blog posts entirely by voice, the Auto Cleanup tier I settled on, and why dictating in chunks beats trying to dictate paragraphs whole.",
+                      "category":  "usecase",
+                      "keyword":  "voice dictation for writers",
+                      "intent":  "informational",
+                      "readMinutes":  8,
+                      "draft":  true,
+                      "tags":  [
+                                   "writing",
+                                   "workflow",
+                                   "longform"
+                               ]
+                  },
+                  {
+                      "day":  11,
+                      "publish":  "2026-06-22",
+                      "slug":  "gdpr-compliant-dictation",
+                      "title":  "GDPR-compliant voice dictation: what \"100% local\" means for European workers",
+                      "dek":  "When your dictation never leaves the device, there\u0027s no controller, no processor, no DPA, no DPIA. Here\u0027s the regulatory math and how OpenVoice\u0027s URL whitelist enforces it.",
+                      "category":  "privacy",
+                      "keyword":  "GDPR voice dictation",
+                      "intent":  "commercial / compliance",
+                      "readMinutes":  9,
+                      "draft":  true,
+                      "tags":  [
+                                   "gdpr",
+                                   "compliance",
+                                   "privacy",
+                                   "enterprise"
+                               ]
+                  },
+                  {
+                      "day":  12,
+                      "publish":  "2026-06-23",
+                      "slug":  "vulkan-metal-cuda-whisper-acceleration",
+                      "title":  "Vulkan, Metal, CUDA: which one is actually running Whisper on your laptop?",
+                      "dek":  "OpenVoice\u0027s auto-select picks dedicated GPU over integrated and the right backend per OS. Here\u0027s what each does, how to tell which is in use, and when to force a different one.",
+                      "category":  "technical",
+                      "keyword":  "Whisper GPU acceleration",
+                      "intent":  "informational / technical",
+                      "readMinutes":  9,
+                      "draft":  true,
+                      "tags":  [
+                                   "gpu",
+                                   "vulkan",
+                                   "metal",
+                                   "cuda",
+                                   "performance"
+                               ]
+                  },
+                  {
+                      "day":  13,
+                      "publish":  "2026-06-24",
+                      "slug":  "customizing-the-dictation-hotkey",
+                      "title":  "Rebinding your dictation hotkey without breaking anything",
+                      "dek":  "Default is âŒƒSpace everywhere it doesn\u0027t collide. Spotlight, IME, X11, OBS â€” what to do when it does. Plus a Push-to-Talk vs Toggle decision guide.",
+                      "category":  "tutorial",
+                      "keyword":  "customize dictation hotkey",
+                      "intent":  "informational",
+                      "readMinutes":  6,
+                      "draft":  true,
+                      "tags":  [
+                                   "hotkeys",
+                                   "configuration",
+                                   "ptt"
+                               ]
+                  },
+                  {
+                      "day":  14,
+                      "publish":  "2026-06-25",
+                      "slug":  "openvoice-vs-macwhisper",
+                      "title":  "OpenVoice vs MacWhisper: which local Whisper app should Mac users pick?",
+                      "dek":  "Both are great. Both run Whisper locally. Both have their own design philosophy. We pit them head-to-head on dictation, transcription, batch import, and the one workflow only one of them does.",
+                      "category":  "vs",
+                      "keyword":  "MacWhisper alternative",
+                      "intent":  "commercial investigation",
+                      "readMinutes":  8,
+                      "draft":  true,
+                      "tags":  [
+                                   "comparison",
+                                   "macwhisper",
+                                   "mac"
+                               ]
+                  },
+                  {
+                      "day":  15,
+                      "publish":  "2026-06-26",
+                      "slug":  "whats-shipping-in-v0-3",
+                      "title":  "What we\u0027re shipping in OpenVoice v0.3 (and what we\u0027re explicitly not doing)",
+                      "dek":  "Streaming transcription, real-time language switching, MCP server. Plus the three commonly-requested features we decided against, with the reasoning.",
+                      "category":  "roadmap",
+                      "keyword":  "OpenVoice roadmap",
+                      "intent":  "brand / community",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "roadmap",
+                                   "v0.3",
+                                   "community"
+                               ]
+                  },
+                  {
+                      "day":  16,
+                      "publish":  "2026-06-27",
+                      "slug":  "mastering-command-mode",
+                      "title":  "Mastering Command Mode: highlight, speak, rewrite",
+                      "dek":  "Wispr Flow\u0027s killer feature without the subscription. Five prompts I use weekly for rewriting emails, tightening Slack messages, and converting prose into bullet points â€” all running locally.",
+                      "category":  "tutorial",
+                      "keyword":  "voice rewrite tool local",
+                      "intent":  "informational",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "command-mode",
+                                   "llm",
+                                   "transforms"
+                               ]
+                  },
+                  {
+                      "day":  17,
+                      "publish":  "2026-06-28",
+                      "slug":  "founder-dictation-workflow",
+                      "title":  "How a solo founder dictates LinkedIn posts, emails, and PRDs without typing",
+                      "dek":  "Six weeks of dictation logs. Where it shaved real time, where it didn\u0027t, and the unexpected place it changed how I think about written communication.",
+                      "category":  "usecase",
+                      "keyword":  "voice dictation for founders",
+                      "intent":  "informational",
+                      "readMinutes":  9,
+                      "draft":  true,
+                      "tags":  [
+                                   "founders",
+                                   "productivity",
+                                   "workflow"
+                               ]
+                  },
+                  {
+                      "day":  18,
+                      "publish":  "2026-06-29",
+                      "slug":  "privacy-showdown-wispr-dragon-openvoice",
+                      "title":  "Privacy showdown: Wispr Flow, Dragon, Apple Dictation, OpenVoice",
+                      "dek":  "Four dictation apps, one question: where does your audio actually go? Network captures, terms-of-service reads, and the only one of the four that can\u0027t leak by design.",
+                      "category":  "privacy",
+                      "keyword":  "voice dictation privacy comparison",
+                      "intent":  "commercial / privacy",
+                      "readMinutes":  11,
+                      "draft":  true,
+                      "tags":  [
+                                   "privacy",
+                                   "comparison",
+                                   "wispr-flow",
+                                   "dragon",
+                                   "apple"
+                               ]
+                  },
+                  {
+                      "day":  19,
+                      "publish":  "2026-06-30",
+                      "slug":  "creating-custom-transforms",
+                      "title":  "Beyond Polish and Prompt Engineer: writing your own OpenVoice Transforms",
+                      "dek":  "Transforms turn the dictated text into something else via a hotkey-bound LLM rewrite. Recipes for a meeting-notes formatter, a code-comment generator, and a translator-to-formal-French.",
+                      "category":  "tutorial",
+                      "keyword":  "OpenVoice transforms guide",
+                      "intent":  "informational",
+                      "readMinutes":  8,
+                      "draft":  true,
+                      "tags":  [
+                                   "transforms",
+                                   "llm",
+                                   "configuration"
+                               ]
+                  },
+                  {
+                      "day":  20,
+                      "publish":  "2026-07-01",
+                      "slug":  "openvoice-vs-whispr-saas",
+                      "title":  "OpenVoice vs Whispr (the new SaaS): what\u0027s the difference?",
+                      "dek":  "There\u0027s a different product called Whispr too â€” confusingly close in name, and very different in approach. Quick reference on both for anyone who\u0027s googled \"Whispr download\" and ended up confused.",
+                      "category":  "vs",
+                      "keyword":  "Whispr vs OpenVoice",
+                      "intent":  "navigational / disambiguation",
+                      "readMinutes":  4,
+                      "draft":  true,
+                      "tags":  [
+                                   "comparison",
+                                   "whispr",
+                                   "alternatives"
+                               ]
+                  },
+                  {
+                      "day":  21,
+                      "publish":  "2026-07-02",
+                      "slug":  "auto-provisioner-matching-models",
+                      "title":  "Inside the auto-provisioner: how OpenVoice picks the right model for your hardware",
+                      "dek":  "Tier A through Tier H. The 9-class hardware matrix, the NPU detection passes, the fallback chain. What gets installed when first-run discovers an M2 vs a Pentium G5400.",
+                      "category":  "technical",
+                      "keyword":  "OpenVoice hardware matching",
+                      "intent":  "informational / technical",
+                      "readMinutes":  10,
+                      "draft":  true,
+                      "tags":  [
+                                   "models",
+                                   "hardware",
+                                   "auto-provisioner"
+                               ]
+                  },
+                  {
+                      "day":  22,
+                      "publish":  "2026-07-03",
+                      "slug":  "personal-dictionary-for-jargon",
+                      "title":  "Teaching OpenVoice your jargon: the Personal Dictionary, explained",
+                      "dek":  "Initial-prompt biasing, starred entries, the 224-token budget Whisper enforces. Plus three patterns that handle product names, internal acronyms, and the spelling of your CTO\u0027s name.",
+                      "category":  "tutorial",
+                      "keyword":  "Whisper custom vocabulary",
+                      "intent":  "informational",
+                      "readMinutes":  8,
+                      "draft":  true,
+                      "tags":  [
+                                   "dictionary",
+                                   "vocabulary",
+                                   "configuration"
+                               ]
+                  },
+                  {
+                      "day":  23,
+                      "publish":  "2026-07-04",
+                      "slug":  "legal-pros-dictation",
+                      "title":  "For legal pros: dictating with case law, citations, and party names that don\u0027t get mangled",
+                      "dek":  "Personal Dictionary + a Transforms hotkey for Bluebook formatting + the cancel hotkey when a phone rings. A workflow tested against three weeks of memo drafting.",
+                      "category":  "usecase",
+                      "keyword":  "voice dictation lawyers",
+                      "intent":  "commercial / vertical",
+                      "readMinutes":  9,
+                      "draft":  true,
+                      "tags":  [
+                                   "legal",
+                                   "vocabulary",
+                                   "workflow",
+                                   "professional"
+                               ]
+                  },
+                  {
+                      "day":  24,
+                      "publish":  "2026-07-05",
+                      "slug":  "community-roadmap",
+                      "title":  "The community asked. Here\u0027s what we shipped, what\u0027s next, and what we said no to",
+                      "dek":  "GitHub Discussions threads, Discord requests, and the messy job of saying \"not yet\" to popular ideas. The 12-feature shortlist for v0.4.",
+                      "category":  "roadmap",
+                      "keyword":  "OpenVoice features",
+                      "intent":  "community",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "community",
+                                   "roadmap",
+                                   "features"
+                               ]
+                  },
+                  {
+                      "day":  25,
+                      "publish":  "2026-07-06",
+                      "slug":  "airgapped-install",
+                      "title":  "Air-gapped OpenVoice: installing dictation on a machine that\u0027s never seen the internet",
+                      "dek":  "Pre-stage the model files, disable update checks, verify with a packet sniffer. A reproducible recipe for compliance-locked-down environments.",
+                      "category":  "privacy",
+                      "keyword":  "offline voice dictation",
+                      "intent":  "commercial / compliance",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "air-gapped",
+                                   "compliance",
+                                   "privacy"
+                               ]
+                  },
+                  {
+                      "day":  26,
+                      "publish":  "2026-07-07",
+                      "slug":  "local-llm-cleanup-pass",
+                      "title":  "Inside the local LLM cleanup pass: how dictated speech becomes polished text",
+                      "dek":  "The bundled llama.cpp sidecar, the 4-tier cleanup picker, the prompt that does most of the work. Plus when to leave Auto Cleanup at Off.",
+                      "category":  "technical",
+                      "keyword":  "local LLM dictation cleanup",
+                      "intent":  "informational / technical",
+                      "readMinutes":  9,
+                      "draft":  true,
+                      "tags":  [
+                                   "llm",
+                                   "cleanup",
+                                   "llama.cpp"
+                               ]
+                  },
+                  {
+                      "day":  27,
+                      "publish":  "2026-07-08",
+                      "slug":  "openvoice-vs-apple-dictation",
+                      "title":  "OpenVoice vs Apple Dictation: when the built-in option isn\u0027t enough",
+                      "dek":  "Apple Dictation is free, fast, and shipped with your Mac. Why anyone would replace it â€” and the four cases where OpenVoice is the obvious upgrade.",
+                      "category":  "vs",
+                      "keyword":  "Apple Dictation alternative",
+                      "intent":  "commercial investigation",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "comparison",
+                                   "apple",
+                                   "mac"
+                               ]
+                  },
+                  {
+                      "day":  28,
+                      "publish":  "2026-07-09",
+                      "slug":  "snippets-expansion",
+                      "title":  "Snippets: expand \"@em\" to your full email signature, instantly",
+                      "dek":  "Dictate a trigger phrase, get the full text. Five snippet patterns I use daily, plus the bind-to-a-Transform pattern for snippets that need light formatting.",
+                      "category":  "tutorial",
+                      "keyword":  "voice snippet expansion",
+                      "intent":  "informational",
+                      "readMinutes":  6,
+                      "draft":  true,
+                      "tags":  [
+                                   "snippets",
+                                   "text-expansion",
+                                   "productivity"
+                               ]
+                  },
+                  {
+                      "day":  29,
+                      "publish":  "2026-07-10",
+                      "slug":  "students-dictating-notes",
+                      "title":  "For students: dictating notes that paste cleanly into Notion, Obsidian, and OneNote",
+                      "dek":  "Cleanup tier choices for live notes vs revision, the Transforms hotkey that converts dictation to bullet outlines, and dealing with technical vocabulary across CS, biology, and law.",
+                      "category":  "usecase",
+                      "keyword":  "voice notes students",
+                      "intent":  "informational",
+                      "readMinutes":  7,
+                      "draft":  true,
+                      "tags":  [
+                                   "students",
+                                   "notes",
+                                   "notion",
+                                   "obsidian"
+                               ]
+                  },
+                  {
+                      "day":  30,
+                      "publish":  "2026-07-11",
+                      "slug":  "one-month-of-openvoice",
+                      "title":  "One month of OpenVoice: download numbers, the bugs we missed, and what we\u0027re shipping next",
+                      "dek":  "Thirty days of usage logs (the ones the app doesn\u0027t collect, that users sent in voluntarily), the issues that surprised us, and the v0.3 plan.",
+                      "category":  "roadmap",
+                      "keyword":  "OpenVoice update",
+                      "intent":  "brand / retrospective",
+                      "readMinutes":  8,
+                      "draft":  true,
+                      "tags":  [
+                                   "retrospective",
+                                   "roadmap",
+                                   "metrics"
+                               ]
+                  }
+              ]
+}

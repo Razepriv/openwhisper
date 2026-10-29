@@ -1,0 +1,21 @@
+﻿<?xml version="1.0" encoding="UTF-8"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>OpenVoice Dispatch</title>
+    <link>https://handy.apexaios.io/blog/</link>
+    <atom:link href="https://handy.apexaios.io/blog/feed.xml" rel="self" type="application/rss+xml" />
+    <description>Notes on local-first voice dictation, vibe coding, and the trade-offs of running speech-to-text on your own machine instead of someone else&apos;s.</description>
+    <language>en-us</language>
+    <lastBuildDate>Thu, 11 Jun 2026 09:00:00 +0000</lastBuildDate>
+    <generator>OpenVoice Dispatch â€” generate-feed.ps1</generator>
+    <item>
+      <title>Introducing OpenVoice: voice dictation that stays on your machine</title>
+      <link>https://handy.apexaios.io/blog/posts/introducing-openvoice.html</link>
+      <guid isPermaLink="true">https://handy.apexaios.io/blog/posts/introducing-openvoice.html</guid>
+      <description>Wispr-Flow-class dictation for Mac, Windows, and Linux. Free, open-source, runs entirely on your hardware. Here&apos;s what shipped and why we built it.</description>
+      <category>Launch</category>
+      <pubDate>Thu, 11 Jun 2026 09:00:00 +0000</pubDate>
+      <author>noreply@apexaios.io (The OpenVoice maintainers)</author>
+    </item>
+  </channel>
+</rss>
